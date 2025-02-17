@@ -1,6 +1,6 @@
 # VeriFi - Decentralized Verification System
 
-![VeriFi Logo](https://github.com/nioomeee/VeriFi/blob/main/VeriFi%20with%20name.svg)  
+![VeriFi Logo](https://github.com/nioomeee/VeriFi/blob/main/VeriFi.svg)  
 *A blockchain-powered platform for secure and transparent verification.*
 
 ## 🌟 Overview
