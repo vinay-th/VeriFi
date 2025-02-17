@@ -1,6 +1,6 @@
 # VeriFi - Decentralized Verification System
 
-![VeriFi Logo](file:///home/niomi/Desktop/VeriFi%20with%20name.svg)  
+![VeriFi Logo](https://github.com/nioomeee/VeriFi/blob/main/VeriFi%20with%20name.svg)  
 *A blockchain-powered platform for secure and transparent verification.*
 
 ## 🌟 Overview
@@ -75,9 +75,8 @@ We welcome contributions! Follow these steps:
 This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
 
 ## 🌍 Connect with Us
-📧 **Email:** your@email.com  
-💬 **Discord:** YourProjectCommunity  
-🐦 **Twitter:** [@YourProject](https://twitter.com/YourProject)  
+📧 **Email:** nioomeee@gmail.com, vinay.th.24@gmail.com
+
 
 ---
 🚀 *Empowering trust with blockchain – VeriFi the future!*
