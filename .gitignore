@@ -1,17 +1,29 @@
-node_modules
+# Node.js dependencies
+node_modules/
+
+# Hardhat artifacts and cache
+artifacts/
+cache/
+
+# Environment files
 .env
 
-# Hardhat files
-/cache
-/artifacts
+# Log files
+*.log
 
-# TypeChain files
-/typechain
-/typechain-types
+# OS-specific files
+.DS_Store
+Thumbs.db
 
-# solidity-coverage files
-/coverage
-/coverage.json
+# IDE/Editor directories and files
+.vscode/
+.idea/
 
-# Hardhat Ignition default folder for deployments against a local node
-ignition/deployments/chain-31337
+# NPM package lock file if you don't want it tracked (optional)
+package-lock.json
+
+# Hardhat test reports
+test_reports/
+
+# Coverage reports (if using code coverage)
+coverage/
