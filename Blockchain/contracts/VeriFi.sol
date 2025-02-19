@@ -74,7 +74,7 @@ contract VeriFi {
     }
 
     function checkAccess(bytes32 _documentHash, address _employer) public view returns (bool) {
-        address owner = documents[_documentHash].uploader;
-        return accessRequests[owner][_documentHash].employer == _employer && accessRequests[owner][_documentHash].validUntil > block.timestamp; //Use parameter in the logic
+        Document storage doc = documents[_documentHash]; // Get the document struct
+        return accessRequests[doc.uploader][_documentHash].employer == _employer && accessRequests[doc.uploader][_documentHash].validUntil > block.timestamp;
     }
 }
