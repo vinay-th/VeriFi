@@ -33,8 +33,8 @@ app.post('/', async (c) => {
     return c.json({ error: 'Unauthorized' }, 401);
   }
 
-  const body = await c.req.text(); // Use raw text instead of JSON
-  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET!; // Store this securely in env variables
+  const body = await c.req.text();
+  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET!;
 
   try {
     const wh = new Webhook(webhookSecret);
