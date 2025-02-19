@@ -2,12 +2,21 @@ import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { handle } from 'hono/vercel';
 import { Webhook } from 'svix';
 
 export const runtime = 'edge';
 
 const app = new Hono().basePath('/api/auth/user');
+
+app.use(
+  '*',
+  cors({
+    origin: '*', // Allow all origins
+    allowMethods: ['GET', 'POST', 'OPTIONS'],
+  })
+);
 
 app.get('/', (c) => {
   return c.json({
