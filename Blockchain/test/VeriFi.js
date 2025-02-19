@@ -92,12 +92,13 @@ describe("VeriFi", function () {
     it("Should correctly check access after granting and before revoking", async function () {
         await veriFi.connect(student).uploadDocument(ipfsHash);
         await veriFi.connect(employer).requestAccess(documentHash); // Employer requests access FIRST
-        const accessBefore = await veriFi.checkAccess(documentHash, employer);
+        let accessBefore = await veriFi.checkAccess(documentHash, employer);
         expect(accessBefore).to.equal(false); // Should not have access yet
     
         await veriFi.connect(student).grantAccess(documentHash, employer);
-        const accessAfter = await veriFi.checkAccess(documentHash, employer);
+        let accessAfter = await veriFi.checkAccess(documentHash, employer);
         expect(accessAfter).to.equal(true); // Should have access now
     });
+    
 
 });
