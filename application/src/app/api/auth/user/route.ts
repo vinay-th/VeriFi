@@ -54,7 +54,7 @@ app.post('/', async (c) => {
         id: userData.id,
         name: userData.first_name || null,
         email: userData.email_addresses[0]?.email_address || null,
-        web3_wallet: userData.web3_wallet || null,
+        web3_wallet: userData.web3_wallets[0]?.web3_wallet || null,
       });
     } else if (eventType === 'user.updated') {
       await db
