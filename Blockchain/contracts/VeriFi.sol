@@ -34,6 +34,7 @@ contract VeriFi {
     }
 
     function uploadDocument(string memory _ipfsHash) public {
+        require(bytes(_ipfsHash).length > 0, "IPFS hash cannot be empty");
         bytes32 documentHash = keccak256(abi.encodePacked(_ipfsHash));
         documents[documentHash] = Document(_ipfsHash, msg.sender, false);
         emit DocumentUploaded(documentHash, _ipfsHash, msg.sender);
