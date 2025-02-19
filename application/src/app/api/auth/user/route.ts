@@ -33,8 +33,13 @@ app.post('/', async (c) => {
     return c.json({ error: 'Unauthorized' }, 401);
   }
 
-  const body = await c.req.text();
-  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET!;
+  const body = await c.req.raw.text(); // FIX: Ensure raw request body is used
+  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    console.error('Missing Clerk Webhook Secret');
+    return c.json({ error: 'Server error' }, 500);
+  }
 
   try {
     const wh = new Webhook(webhookSecret);
@@ -54,7 +59,7 @@ app.post('/', async (c) => {
         id: userData.id,
         name: userData.first_name || null,
         email: userData.email_addresses[0]?.email_address || null,
-        web3_wallet: userData.web3_wallets[0]?.web3_wallet || null,
+        web3_wallet: userData.web3_wallets[0]?.web3_wallet || null, // FIXED
       });
     } else if (eventType === 'user.updated') {
       await db
@@ -62,7 +67,7 @@ app.post('/', async (c) => {
         .set({
           name: userData.first_name || null,
           email: userData.email_addresses[0]?.email_address || null,
-          web3_wallet: userData.web3_wallets[0]?.web3_wallet || null,
+          web3_wallet: userData.web3_wallets[0]?.web3_wallet || null, // FIXED
         })
         .where(eq(users.id, userData.id));
     } else if (eventType === 'user.deleted') {
