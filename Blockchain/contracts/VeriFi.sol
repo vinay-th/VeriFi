@@ -1,3 +1,4 @@
+// contracts/VeriFi.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
@@ -14,14 +15,14 @@ contract VeriFi {
     }
 
     mapping(bytes32 => Document) public documents;
-    mapping(address => mapping(bytes32 => AccessRequest)) public accessRequests; // Nested mapping for requests
+    mapping(address => mapping(bytes32 => AccessRequest)) public accessRequests;
     address public admin;
 
     event DocumentUploaded(bytes32 indexed documentHash, string ipfsHash, address indexed uploader);
     event DocumentVerified(bytes32 indexed documentHash, address indexed verifier);
     event AccessRequested(bytes32 indexed documentHash, address indexed employer);
     event AccessGranted(bytes32 indexed documentHash, address indexed employer, address indexed student);
-    event AccessRevoked(bytes32 indexed documentHash, address indexed employer, address indexed student); // Add revoke event
+    event AccessRevoked(bytes32 indexed documentHash, address indexed employer, address indexed student);
 
     constructor() {
         admin = msg.sender;
@@ -53,21 +54,21 @@ contract VeriFi {
     }
 
     function requestAccess(bytes32 _documentHash) public {
-        require(documents[_documentHash].uploader != msg.sender, "You cannot request access to your own document."); // Prevent self-requests
+        require(documents[_documentHash].uploader!= msg.sender, "You cannot request access to your own document.");
         accessRequests[documents[_documentHash].uploader][_documentHash] = AccessRequest(msg.sender, block.timestamp + 6 hours); // 6-hour validity
         emit AccessRequested(_documentHash, msg.sender);
     }
 
     function grantAccess(bytes32 _documentHash, address _employer) public {
-        require(documents[_documentHash].uploader == msg.sender, "Only the document owner can grant access."); // Only the student can grant
+        require(documents[_documentHash].uploader == msg.sender, "Only the document owner can grant access.");
         require(accessRequests[msg.sender][_documentHash].employer == _employer, "Employer has not requested access.");
-        require(accessRequests[msg.sender][_documentHash].validUntil > block.timestamp, "Request has expired."); // Check if request is still valid.
+        require(accessRequests[msg.sender][_documentHash].validUntil > block.timestamp, "Request has expired.");
         emit AccessGranted(_documentHash, _employer, msg.sender);
     }
 
     function revokeAccess(bytes32 _documentHash, address _employer) public {
         require(documents[_documentHash].uploader == msg.sender, "Only the document owner can revoke access.");
-        delete accessRequests[msg.sender][_documentHash]; // Remove the access request
+        delete accessRequests[msg.sender][_documentHash];
         emit AccessRevoked(_documentHash, _employer, msg.sender);
     }
 
