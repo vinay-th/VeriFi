@@ -33,8 +33,8 @@ app.post('/', async (c) => {
     return c.json({ error: 'Unauthorized' }, 401);
   }
 
-  const body = await c.req.text(); // Use raw text instead of JSON
-  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET!; // Store this securely in env variables
+  const body = await c.req.text();
+  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET!;
 
   try {
     const wh = new Webhook(webhookSecret);
@@ -62,7 +62,7 @@ app.post('/', async (c) => {
         .set({
           name: userData.first_name || null,
           email: userData.email_addresses[0]?.email_address || null,
-          web3_wallet: userData.web3_wallet || null,
+          web3_wallet: userData.web3_wallets[0]?.web3_wallet || null,
         })
         .where(eq(users.id, userData.id));
     } else if (eventType === 'user.deleted') {
