@@ -62,7 +62,7 @@ app.post('/', async (c) => {
         .set({
           name: userData.first_name || null,
           email: userData.email_addresses[0]?.email_address || null,
-          web3_wallet: userData.web3_wallet || null,
+          web3_wallet: userData.web3_wallets[0]?.web3_wallet || null,
         })
         .where(eq(users.id, userData.id));
     } else if (eventType === 'user.deleted') {
