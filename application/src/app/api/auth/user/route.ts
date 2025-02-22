@@ -18,10 +18,16 @@ app.use(
   })
 );
 
-app.get('/', (c) => {
-  return c.json({
-    message: 'Hello from Auth!',
-  });
+app.get('/', async (c) => {
+  const id = c.req.query('id');
+
+  if (!id) {
+    return c.json({ error: 'Missing user ID' }, 400);
+  }
+
+  const data = await db.select().from(users).where(eq(users.id, id));
+
+  return c.json(data);
 });
 
 app.post('/', async (c) => {
@@ -83,3 +89,4 @@ app.post('/', async (c) => {
 
 export const GET = handle(app);
 export const POST = handle(app);
+export const PATCH = handle(app);
