@@ -31,6 +31,13 @@ app.patch('/', async (c) => {
   if (role !== undefined) updateData.role = role || null;
   if (web3_wallet !== undefined) updateData.web3_wallet = web3_wallet || null;
 
+  if (Object.keys(updateData).length === 0) {
+    return c.json({ error: 'No valid fields to update' }, 400);
+  }
+
+  // Perform update operation
+  await db.update(users).set(updateData).where(eq(users.id, id));
+
   if (role === 'STUDENT') {
     const existingUser = await db.select().from(users).where(eq(users.id, id));
 
@@ -106,13 +113,6 @@ app.patch('/', async (c) => {
 
     return c.json({ message: 'User registered as verifier successfully' });
   }
-
-  if (Object.keys(updateData).length === 0) {
-    return c.json({ error: 'No valid fields to update' }, 400);
-  }
-
-  // Perform update operation
-  await db.update(users).set(updateData).where(eq(users.id, id));
 
   return c.json({ message: 'User data updated', updatedFields: updateData });
 });
