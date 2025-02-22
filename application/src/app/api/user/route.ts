@@ -18,7 +18,7 @@ app.use(
 
 app.patch('/', async (c) => {
   const body = await c.req.json();
-  const { id, name, email, role, web3_wallet } = body;
+  const { id, name, email, role, web3_wallet, university_name } = body;
 
   if (!id) {
     return c.json({ error: 'Missing user ID' }, 400);
@@ -77,7 +77,6 @@ app.patch('/', async (c) => {
 
   if (role === 'VERIFIER') {
     const existingUser = await db.select().from(users).where(eq(users.id, id));
-    const { universityName } = body.university_name;
 
     if (existingUser.length === 0) {
       return c.json({ error: 'User not found' }, 404);
@@ -106,7 +105,7 @@ app.patch('/', async (c) => {
       verifier_id: verifierId,
       user_id: id,
       name: existingUser[0].name,
-      university_name: universityName || null,
+      university_name: university_name || null,
       email: existingUser[0].email,
       web3_wallet: existingUser[0].web3_wallet || null, // Optional
     });
