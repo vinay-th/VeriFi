@@ -1,6 +1,6 @@
 import { db } from '@/db';
-import { students, users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { students, users, verifiers } from '@/db/schema';
+import { desc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { handle } from 'hono/vercel';
@@ -30,13 +30,6 @@ app.patch('/', async (c) => {
   if (email !== undefined) updateData.email = email || null;
   if (role !== undefined) updateData.role = role || null;
   if (web3_wallet !== undefined) updateData.web3_wallet = web3_wallet || null;
-
-  if (Object.keys(updateData).length === 0) {
-    return c.json({ error: 'No valid fields to update' }, 400);
-  }
-
-  // Perform update operation
-  await db.update(users).set(updateData).where(eq(users.id, id));
 
   if (role === 'STUDENT') {
     const existingUser = await db.select().from(users).where(eq(users.id, id));
@@ -75,9 +68,56 @@ app.patch('/', async (c) => {
     return c.json({ message: 'User registered as student successfully' });
   }
 
+  if (role === 'VERIFIER') {
+    const existingUser = await db.select().from(users).where(eq(users.id, id));
+    const { universityName } = body.university_name;
+
+    if (existingUser.length === 0) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    // Check if user is already in verifiers table
+    const existingVerifier = await db
+      .select()
+      .from(verifiers)
+      .where(eq(verifiers.user_id, id));
+
+    if (existingVerifier.length > 0) {
+      return c.json({ message: 'User is already registered as a verifier' });
+    }
+
+    const lastVerifier = await db
+      .select({ lastId: verifiers.id })
+      .from(verifiers)
+      .orderBy(desc(verifiers.id))
+      .limit(1);
+
+    const nextId = lastVerifier.length > 0 ? lastVerifier[0].lastId + 1 : 1;
+    const verifierId = `VER${String(nextId).padStart(3, '0')}`;
+
+    await db.insert(verifiers).values({
+      verifier_id: verifierId,
+      user_id: id,
+      name: existingUser[0].name,
+      university_name: universityName || null,
+      email: existingUser[0].email,
+      web3_wallet: existingUser[0].web3_wallet || null, // Optional
+    });
+
+    return c.json({ message: 'User registered as verifier successfully' });
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    return c.json({ error: 'No valid fields to update' }, 400);
+  }
+
+  // Perform update operation
+  await db.update(users).set(updateData).where(eq(users.id, id));
+
   return c.json({ message: 'User data updated', updatedFields: updateData });
 });
 
 export const GET = handle(app);
 export const POST = handle(app);
 export const PATCH = handle(app);
+export default handle(app);
