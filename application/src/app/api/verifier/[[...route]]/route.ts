@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/vercel';
 import { db } from '@/db';
-import { verifiers } from '@/db/schema';
+import { students, verifiers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 export const runtime = 'edge';
@@ -57,6 +57,21 @@ app.patch('/update-verifier', async (c) => {
   return c.json({ message: 'Verifier updated successfully' });
 });
 
+app.get('/get-students-by-verifier-id', async (c) => {
+  const verifierId = c.req.query('verifierId');
+
+  if (!verifierId) {
+    return c.json({ error: 'Missing verifier ID' }, 400);
+  }
+
+  const studentsList = await db
+    .select()
+    .from(students)
+    .where(eq(students.verifier, verifierId));
+
+  return c.json(studentsList);
+});
+
 app.delete('/delete-verifier', async (c) => {
   const id = c.req.query('id');
 
@@ -72,3 +87,5 @@ app.delete('/delete-verifier', async (c) => {
 
 export const GET = handle(app);
 export const POST = handle(app);
+export const PATCH = handle(app);
+export const DELETE = handle(app);
