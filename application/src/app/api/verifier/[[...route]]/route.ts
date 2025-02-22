@@ -15,16 +15,16 @@ app.get('/get-all-verifiers', async (c) => {
 });
 
 app.get('/get-verifier-by-id', async (c) => {
-  const id = c.req.query('id');
+  const verifierId = c.req.query('verifierId');
 
-  if (!id) {
+  if (!verifierId) {
     return c.json({ error: 'Missing verifier ID' }, 400);
   }
 
   const verifier = await db
     .select()
     .from(verifiers)
-    .where(eq(verifiers.user_id, id));
+    .where(eq(verifiers.verifier_id, verifierId));
 
   if (verifier.length === 0) {
     return c.json({ error: 'Verifier not found' }, 404);
@@ -72,15 +72,15 @@ app.get('/get-students-by-verifier-id', async (c) => {
   return c.json(studentsList);
 });
 
-app.delete('/delete-verifier', async (c) => {
-  const id = c.req.query('id');
+app.post('/delete-verifier', async (c) => {
+  const verifierId = c.req.query('verifierId');
 
-  if (!id) {
+  if (!verifierId) {
     return c.json({ error: 'Missing verifier ID' }, 400);
   }
 
   // Perform delete operation
-  await db.delete(verifiers).where(eq(verifiers.user_id, id));
+  await db.delete(verifiers).where(eq(verifiers.verifier_id, verifierId));
 
   return c.json({ message: 'Verifier deleted successfully' });
 });
