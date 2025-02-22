@@ -17,7 +17,7 @@ export const students = pgTable('students', {
   name: text('name').notNull(),
   email: text('email').notNull(),
   hexcode: text('hexcode').notNull().unique(),
-  admin: text('admin').notNull().default('false'),
+  verifier: text('verifier').notNull().default('false'),
   wallet_address: text('wallet_address').unique(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });

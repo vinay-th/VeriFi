@@ -71,5 +71,21 @@ app.delete('/delete-student', async (c) => {
   return c.json({ message: 'Student deleted successfully' });
 });
 
+app.post('/allot-verifier', async (c) => {
+  const body = await c.req.json();
+  const { enrolment_id, verifier_id } = body;
+
+  if (!enrolment_id || !verifier_id) {
+    return c.json({ error: 'Missing enrollment ID or verifier ID' }, 400);
+  }
+
+  await db
+    .update(students)
+    .set({ verifier: verifier_id })
+    .where(eq(students.enrolment_id, enrolment_id));
+
+  return c.json({ message: `Verifier allotted successfully` });
+});
+
 export const GET = handle(app);
 export const POST = handle(app);
