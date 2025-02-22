@@ -64,8 +64,10 @@ contract VeriFi {
         require(documents[_documentHash].uploader == msg.sender, "Only the document owner can grant access.");
         require(accessRequests[msg.sender][_documentHash].employer == _employer, "Employer has not requested access.");
         require(accessRequests[msg.sender][_documentHash].validUntil > block.timestamp, "Request has expired.");
+        accessRequests[msg.sender][_documentHash].validUntil = block.timestamp + 6 hours;
         emit AccessGranted(_documentHash, _employer, msg.sender);
     }
+
 
     function revokeAccess(bytes32 _documentHash, address _employer) public {
         require(documents[_documentHash].uploader == msg.sender, "Only the document owner can revoke access.");
@@ -74,7 +76,7 @@ contract VeriFi {
     }
 
     function checkAccess(bytes32 _documentHash, address _employer) public view returns (bool) {
-        address owner = documents[_documentHash].uploader;
-        return accessRequests[owner][_documentHash].employer == _employer && accessRequests[owner][_documentHash].validUntil > block.timestamp; //Use parameter in the logic
+        Document storage doc = documents[_documentHash]; // Get the document struct
+        return accessRequests[doc.uploader][_documentHash].employer == _employer && accessRequests[doc.uploader][_documentHash].validUntil > block.timestamp;
     }
 }
