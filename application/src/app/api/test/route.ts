@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { handle } from 'hono/vercel';
+import { currentUser } from '@clerk/nextjs/server';
 
 export const runtime = 'edge';
 
@@ -14,9 +15,11 @@ app.use(
   })
 );
 
-app.get('/', (c) => {
+app.get('/', async (c) => {
+  const user = await currentUser();
+
   return c.json({
-    message: 'Hello from Vinay!',
+    message: 'Hello ' + user + ' from Vinay!',
   });
 });
 
