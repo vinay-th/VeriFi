@@ -3,18 +3,19 @@ import { handle } from 'hono/vercel';
 import { db } from '@/db';
 import { students } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { keyAuth } from '../../../../../middleware/keyAuth';
 
 export const runtime = 'edge';
 
 const app = new Hono().basePath('/api/student');
 
-app.get('/get-all-students', async (c) => {
+app.get('/get-all-students', keyAuth, async (c) => {
   const allStudents = await db.select().from(students);
 
   return c.json(allStudents);
 });
 
-app.get('/get-student-by-id', async (c) => {
+app.get('/get-student-by-id', keyAuth, async (c) => {
   const id = c.req.query('id');
 
   if (!id) {
@@ -33,7 +34,7 @@ app.get('/get-student-by-id', async (c) => {
   return c.json(student[0]);
 });
 
-app.patch('/update-student', async (c) => {
+app.patch('/update-student', keyAuth, async (c) => {
   const body = await c.req.json();
   const { id, name, wallet_address, admin } = body;
 
@@ -58,7 +59,7 @@ app.patch('/update-student', async (c) => {
   return c.json({ message: 'Student updated successfully' });
 });
 
-app.delete('/delete-student', async (c) => {
+app.delete('/delete-student', keyAuth, async (c) => {
   const id = c.req.query('id');
 
   if (!id) {
@@ -71,7 +72,7 @@ app.delete('/delete-student', async (c) => {
   return c.json({ message: 'Student deleted successfully' });
 });
 
-app.post('/allot-verifier', async (c) => {
+app.post('/allot-verifier', keyAuth, async (c) => {
   const body = await c.req.json();
   const { enrolment_id, verifier_id } = body;
 
