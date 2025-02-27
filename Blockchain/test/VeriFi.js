@@ -18,12 +18,14 @@ describe("VeriFi", function () {
 
         // Deploy the contract
         VeriFi = await ethers.getContractFactory("VeriFi");
-        veriFi = await VeriFi.deploy(admin.address);
+        veriFi = await VeriFi.deploy(owner.address);
 
+        await veriFi.connect(owner).addAdmin(admin.address);
+        
         // Set up test data
-        ipfsHash = "QmWATm7ABjTjT9n9c59BrWn4i9v79eo3uQe72wFj9V5y9A";
-        ipfsBytes32 = ethers.utils.formatBytes32String(ipfsHash);
-        documentHash = ethers.utils.keccak256(ipfsBytes32);
+        ipfsHash = "QmWATm7ABjTjT9n9c59BrWn4i9v79eo3uQe72wFj9V5y9A".slice(0, 31);
+        ipfsBytes32 = ethers.encodeBytes32String(ipfsHash);
+        documentHash = ethers.keccak256(ipfsBytes32);
     });
 
     it("Should allow a student to upload a document", async function () {
