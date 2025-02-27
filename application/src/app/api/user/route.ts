@@ -4,6 +4,7 @@ import { desc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { handle } from 'hono/vercel';
+import { keyAuth } from '../../../../middleware/keyAuth';
 export const runtime = 'edge';
 
 const app = new Hono().basePath('/api/user');
@@ -16,7 +17,7 @@ app.use(
   })
 );
 
-app.patch('/', async (c) => {
+app.patch('/', keyAuth, async (c) => {
   const body = await c.req.json();
   const { id, name, email, role, web3_wallet, university_name } = body;
 

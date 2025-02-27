@@ -3,18 +3,19 @@ import { handle } from 'hono/vercel';
 import { db } from '@/db';
 import { students, verifiers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { keyAuth } from '../../../../../middleware/keyAuth';
 
 export const runtime = 'edge';
 
 const app = new Hono().basePath('/api/verifier');
 
-app.get('/get-all-verifiers', async (c) => {
+app.get('/get-all-verifiers', keyAuth, async (c) => {
   const allVerifiers = await db.select().from(verifiers);
 
   return c.json(allVerifiers);
 });
 
-app.get('/get-verifier-by-id', async (c) => {
+app.get('/get-verifier-by-id', keyAuth, async (c) => {
   const verifierId = c.req.query('verifierId');
 
   if (!verifierId) {
@@ -33,7 +34,7 @@ app.get('/get-verifier-by-id', async (c) => {
   return c.json(verifier[0]);
 });
 
-app.patch('/update-verifier', async (c) => {
+app.patch('/update-verifier', keyAuth, async (c) => {
   const body = await c.req.json();
   const { id, name, wallet_address } = body;
 
@@ -57,7 +58,7 @@ app.patch('/update-verifier', async (c) => {
   return c.json({ message: 'Verifier updated successfully' });
 });
 
-app.get('/get-students-by-verifier-id', async (c) => {
+app.get('/get-students-by-verifier-id', keyAuth, async (c) => {
   const verifierId = c.req.query('verifierId');
 
   if (!verifierId) {
@@ -72,7 +73,7 @@ app.get('/get-students-by-verifier-id', async (c) => {
   return c.json(studentsList);
 });
 
-app.post('/delete-verifier', async (c) => {
+app.post('/delete-verifier', keyAuth, async (c) => {
   const verifierId = c.req.query('verifierId');
 
   if (!verifierId) {

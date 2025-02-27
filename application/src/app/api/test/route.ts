@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { handle } from 'hono/vercel';
+import { currentUser } from '@clerk/nextjs/server';
+import { keyAuth } from '../../../../middleware/keyAuth';
 
 export const runtime = 'edge';
 
@@ -14,9 +16,11 @@ app.use(
   })
 );
 
-app.get('/', (c) => {
+app.get('/', keyAuth, async (c) => {
+  const user = await currentUser();
+
   return c.json({
-    message: 'Hello from Vinay!',
+    message: 'Hello ' + user + ' from Vinay!',
   });
 });
 
