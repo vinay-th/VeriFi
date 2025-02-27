@@ -16,7 +16,7 @@ describe("VeriFi", function () {
         [admin, student, employer, otherUser] = await ethers.getSigners();
         VeriFi = await ethers.getContractFactory("VeriFi");
         veriFi = await VeriFi.deploy(admin.address);
-        await veriFi.waitForDeployment();
+        await veriFi.waitForDeployment(); // Await deployment
         ipfsHash = "QmWATm7ABjTjT9n9c59BrWn4i9v79eo3uQe72wFj9V5y9A";
         ipfsBytes32 = ethers.utils.formatBytes32String(ipfsHash);
         documentHash = ethers.keccak256(ipfsBytes32);
