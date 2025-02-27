@@ -1,5 +1,5 @@
+const { ethers } = require("hardhat"); // Use Hardhat's ethers
 const { expect } = require("chai");
-const { ethers } = require("hardhat");
 
 describe("VeriFi", function () {
     let VeriFi;
@@ -13,13 +13,17 @@ describe("VeriFi", function () {
     let ipfsBytes32;
 
     beforeEach(async function () {
+        // Use Hardhat's ethers.getSigners()
         [admin, student, employer, otherUser] = await ethers.getSigners();
+
+        // Deploy the contract
         VeriFi = await ethers.getContractFactory("VeriFi");
         veriFi = await VeriFi.deploy(admin.address);
-        await veriFi.waitForDeployment(); // Await deployment
+
+        // Set up test data
         ipfsHash = "QmWATm7ABjTjT9n9c59BrWn4i9v79eo3uQe72wFj9V5y9A";
         ipfsBytes32 = ethers.utils.formatBytes32String(ipfsHash);
-        documentHash = ethers.keccak256(ipfsBytes32);
+        documentHash = ethers.utils.keccak256(ipfsBytes32);
     });
 
     it("Should allow a student to upload a document", async function () {
@@ -104,10 +108,7 @@ describe("VeriFi", function () {
         const certificateName = "Degree Certificate";
         const issueDate = "2024-01-01";
         const issuer = "University";
-        await veriFi.connect(admin).mintCertificate(student.address, certificateName, issueDate, issuer, documentHash);
-        const certificate = await veriFi.getCertificateDetails(documentHash);
-        expect(certificate.recipient).to.equal(student.address);
-        expect(certificate.certificateName).to.equal(certificateName);
+        await veriFi.connect(admin).mintCertificate(student.address, certificateName, issueDate, issuer, documentHash); const certificate = await veriFi.getCertificateDetails(documentHash); expect(certificate.recipient).to.equal(student.address); expect(certificate.certificateName).to.equal(certificateName);
     });
 
     it("Should NOT allow non-admin to mint a certificate", async function () {
