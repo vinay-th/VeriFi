@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 export default {
-  darkMode: ['class'],
+  darkMode: 'class', // ✅ Fixed darkMode configuration
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,7 +9,12 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        Instrument_Sans: ['Instrument_Sans', 'sans-serif'],
+        Inter: ['Inter', 'sans-serif'],
+      },
       colors: {
+        BGBlue: '#050024', // ✅ Added BG-Blue color
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
