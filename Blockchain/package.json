@@ -3,14 +3,17 @@
   "version": "1.0.0",
   "description": "![VeriFi Logo](https://github.com/nioomeee/VeriFi/blob/main/VeriFi.svg)   *A blockchain-powered platform for secure and transparent verification.*",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "resolutions": {
+    "ethers": "6.13.5"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@openzeppelin/contracts": "^5.2.0",
     "verifi": "file:",
     "web3": "^4.16.0"
   },
@@ -30,7 +33,7 @@
     "chai": "^4.5.0",
     "dotenv": "^16.4.7",
     "ethers": "^6.13.5",
-    "hardhat": "^2.22.18",
+    "hardhat": "^2.22.19",
     "hardhat-gas-reporter": "^1.0.10",
     "solidity-coverage": "^0.8.14",
     "ts-node": "^10.9.2",
