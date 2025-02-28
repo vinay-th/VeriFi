@@ -61,6 +61,9 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      borderImage: {
+        gradient: 'linear-gradient(90deg, #7F51C4, #DE98F7, #D5C6FF) 1',
+      },
     },
   },
   plugins: [require('tailwindcss-animate')],

@@ -10,16 +10,16 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
-import { UserButton } from '@clerk/nextjs';
+import { ClerkProvider, UserButton } from '@clerk/nextjs';
 
 export function NavigationMenuDemo() {
   return (
-    <div className="relative flex items-center justify-between w-full px-6">
+    <div className="relative flex pt-3 items-center justify-between w-full px-10">
       <div className="flex items-center gap-2">
         <Link href="/" legacyBehavior passHref>
           <Image src={Logo} alt="Logo" className="h-10 w-10" />
         </Link>
-        <span className="text-white font-semibold text-3xl font-Instrument_Sans">
+        <span className="text-white text-3xl font-Instrument_Sans font-normal ">
           VeriFi
         </span>
       </div>
@@ -27,7 +27,7 @@ export function NavigationMenuDemo() {
       {/* Center - Navigation Links */}
       <div className="absolute left-1/2 transform -translate-x-1/2">
         <NavigationMenu>
-          <NavigationMenuList className="flex gap-6">
+          <NavigationMenuList className="flex gap-6 pt-[0.81rem] pb-[0.81rem]">
             <NavigationMenuItem>
               <NavigationMenuLink href="#about" className="bg-transparent">
                 About
@@ -35,7 +35,7 @@ export function NavigationMenuDemo() {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink href="#components" className="bg-transparent">
-                Components
+                Products
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
@@ -50,7 +50,9 @@ export function NavigationMenuDemo() {
       </div>
 
       <div>
-        <UserButton />
+        <ClerkProvider>
+          <UserButton />
+        </ClerkProvider>
       </div>
     </div>
   );
