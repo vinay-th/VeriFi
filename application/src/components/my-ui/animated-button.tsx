@@ -1,12 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const AnimatedButton = ({
   classes,
   children,
+  onClick,
 }: {
   classes?: string;
   children: React.ReactNode;
+  onClick?: () => void;
 }) => {
   const [gradientPosition, setGradientPosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -22,17 +25,18 @@ const AnimatedButton = ({
   };
 
   return (
-    <button
+    <Button
+      onClick={onClick}
       ref={buttonRef}
       className={cn(
-        'relative px-6 py-2 text-white font-bold rounded-full bg-[#050024] overflow-hidden border-none',
+        'relative px-6 py-2 text-white font-bold rounded-full bg-[#050024] overflow-hidden border-none flex items-center gap-2',
         classes
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseMove={isHovered ? handleMouseMove : undefined}
     >
-      <span className="relative z-10">{children}</span>
+      <span className="relative z-10 flex items-center gap-2">{children}</span>
 
       {/* Glowing border */}
       <div
@@ -47,7 +51,7 @@ const AnimatedButton = ({
         {/* Button background */}
         <div className="w-full h-full bg-[#050024] rounded-full"></div>
       </div>
-    </button>
+    </Button>
   );
 };
 
