@@ -4,14 +4,26 @@ pragma solidity ^0.8.20;
 contract VeriFi {
     error NotVerifiedAdmin();
     error EmptyIpfsHash();
+    error DocumentNotFound();
+    error AccessNotRequested();
+    error AccessNotGranted();
+    error CertificateAlreadyMinted();
 
     address public admin;
     mapping(address => bool) public verifiedAdmins;
     mapping(address => string[]) public studentDocuments;
     mapping(bytes32 => bool) public verifiedDocuments;
     mapping(bytes32 => address) public documentOwners;
-    mapping(address => mapping(address => bool)) public accessRequests;
+    mapping(address => mapping(address => bool)) public accessRequests; // Tracks access requests
+    mapping(address => mapping(address => bool)) public accessGrants; // Tracks granted access
     mapping(bytes32 => bool) public mintedCertificates;
+
+    event DocumentUploaded(address indexed student, string ipfsHash, bytes32 docHash);
+    event DocumentVerified(bytes32 indexed docHash);
+    event AccessRequested(address indexed student, address indexed employer);
+    event AccessGranted(address indexed student, address indexed employer);
+    event AccessRevoked(address indexed student, address indexed employer);
+    event CertificateMinted(bytes32 indexed docHash);
 
     modifier onlyAdmin() {
         if (!verifiedAdmins[msg.sender]) {
@@ -34,36 +46,48 @@ contract VeriFi {
         verifiedAdmins[_admin] = true;
     }
 
-    function uploadDocument(string memory ipfsHash) external {
+    function uploadDocument(string memory ipfsHash) external returns (bytes32 docHash) {
         if (bytes(ipfsHash).length == 0) {
             revert EmptyIpfsHash();
         }
-        bytes32 docHash = keccak256(abi.encodePacked(ipfsHash, msg.sender));
-        studentDocuments[msg.sender].push(ipfsHash);
+        docHash = keccak256(abi.encodePacked(ipfsHash, msg.sender));
         documentOwners[docHash] = msg.sender;
+        studentDocuments[msg.sender].push(ipfsHash);
+        emit DocumentUploaded(msg.sender, ipfsHash, docHash);
     }
 
     function verifyDocument(bytes32 docHash) external onlyAdmin {
+        if (documentOwners[docHash] == address(0)) {
+            revert DocumentNotFound();
+        }
         verifiedDocuments[docHash] = true;
+        emit DocumentVerified(docHash);
     }
 
     function requestAccess(address student) external {
-        require(msg.sender != student, "Owner cannot request access");
+        require(msg.sender != student, "Cannot request access to own documents");
         accessRequests[student][msg.sender] = true;
+        emit AccessRequested(student, msg.sender);
     }
 
     function grantAccess(address employer) external {
         require(accessRequests[msg.sender][employer], "No access request found");
-        accessRequests[msg.sender][employer] = false; // Access granted
+        accessRequests[msg.sender][employer] = false;
+        accessGrants[msg.sender][employer] = true;
+        emit AccessGranted(msg.sender, employer);
     }
 
     function revokeAccess(address employer) external {
-        require(accessRequests[msg.sender][employer] == false, "No granted access to revoke");
-        accessRequests[msg.sender][employer] = true;
+        require(accessGrants[msg.sender][employer], "No granted access to revoke");
+        accessGrants[msg.sender][employer] = false;
+        emit AccessRevoked(msg.sender, employer);
     }
 
     function mintCertificate(bytes32 docHash) external onlyAdmin {
-        require(!mintedCertificates[docHash], "Certificate already minted");
+        if (mintedCertificates[docHash]) {
+            revert CertificateAlreadyMinted();
+        }
         mintedCertificates[docHash] = true;
+        emit CertificateMinted(docHash);
     }
 }
