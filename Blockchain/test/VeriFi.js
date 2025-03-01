@@ -12,9 +12,19 @@ describe("VeriFi", function () {
     });
 
     async function uploadAndVerifyDocument(student) {
+        // Upload the document
         const tx = await veriFi.connect(student).uploadDocument(ipfsHash);
         const receipt = await tx.wait();
-        const docHash = receipt.events.find((e) => e.event === "DocumentUploaded").args.docHash;
+
+        // Get the document hash from the transaction logs
+        console.log("Fetching events");
+        const event = receipt.events?.find((e) => e.event === "DocumentUploaded"); 
+        if (!event) {
+            throw new Error("DocumentUploaded event not found");
+        }
+        const docHash = event.args.docHash; // Fix typo: `events` -> `event`
+
+        // Verify the document
         await veriFi.connect(admin).verifyDocument(docHash);
         return docHash;
     }

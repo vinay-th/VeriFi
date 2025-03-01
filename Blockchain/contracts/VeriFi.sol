@@ -8,14 +8,15 @@ contract VeriFi {
     error AccessNotRequested();
     error AccessNotGranted();
     error CertificateAlreadyMinted();
+    error DocumentNotVerified();
 
     address public admin;
     mapping(address => bool) public verifiedAdmins;
     mapping(address => string[]) public studentDocuments;
     mapping(bytes32 => bool) public verifiedDocuments;
     mapping(bytes32 => address) public documentOwners;
-    mapping(address => mapping(address => bool)) public accessRequests; // Tracks access requests
-    mapping(address => mapping(address => bool)) public accessGrants; // Tracks granted access
+    mapping(address => mapping(address => bool)) public accessRequests;
+    mapping(address => mapping(address => bool)) public accessGrants;
     mapping(bytes32 => bool) public mintedCertificates;
 
     event DocumentUploaded(address indexed student, string ipfsHash, bytes32 docHash);
@@ -39,7 +40,7 @@ contract VeriFi {
 
     constructor() {
         admin = msg.sender;
-        verifiedAdmins[msg.sender] = true; // Ensure the deployer is a verified admin
+        verifiedAdmins[msg.sender] = true;
     }
 
     function addVerifiedAdmin(address _admin) external onlyAdmin {
@@ -54,6 +55,7 @@ contract VeriFi {
         documentOwners[docHash] = msg.sender;
         studentDocuments[msg.sender].push(ipfsHash);
         emit DocumentUploaded(msg.sender, ipfsHash, docHash);
+        return docHash; // Fix: Return docHash to match test expectations
     }
 
     function verifyDocument(bytes32 docHash) external onlyAdmin {
@@ -84,6 +86,9 @@ contract VeriFi {
     }
 
     function mintCertificate(bytes32 docHash) external onlyAdmin {
+        if (!verifiedDocuments[docHash]) {
+            revert DocumentNotVerified();
+        }
         if (mintedCertificates[docHash]) {
             revert CertificateAlreadyMinted();
         }
