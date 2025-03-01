@@ -18,9 +18,9 @@ describe("VeriFi", function () {
 
         // Deploy the contract
         VeriFi = await ethers.getContractFactory("VeriFi");
-        veriFi = await VeriFi.deploy(owner.address);
+        veriFi = await VeriFi.deploy(admin.address); // Use admin instead of owner
 
-        await veriFi.connect(owner).addAdmin(admin.address);
+        await veriFi.connect(admin).addAdmin(admin.address); // Use admin instead of owner
         
         // Set up test data
         ipfsHash = "QmWATm7ABjTjT9n9c59BrWn4i9v79eo3uQe72wFj9V5y9A".slice(0, 31);
@@ -36,7 +36,7 @@ describe("VeriFi", function () {
     });
 
     it("Should NOT allow a student to upload a document with an empty IPFS hash", async function () {
-        const emptyIpfsHash = ethers.utils.formatBytes32String("");
+        const emptyIpfsHash = ethers.encodeBytes32String(""); // Use encodeBytes32String
         await expect(veriFi.connect(student).uploadDocument(emptyIpfsHash)).to.be.revertedWithCustomError(veriFi, "EmptyIpfsHash");
     });
 
