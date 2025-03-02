@@ -29,7 +29,7 @@ const AnimatedButton = ({
       onClick={onClick}
       ref={buttonRef}
       className={cn(
-        'relative px-6 py-2 text-white font-bold rounded-full bg-[#050024] overflow-hidden border-none flex items-center gap-2',
+        'relative px-6 py-2 text-white font-bold rounded-full bg-[#050024] overflow-hidden border-none flex items-center gap-2 hover:translate-x-1 transition-transform duration-300 ease-in-out',
         classes
       )}
       onMouseEnter={() => setIsHovered(true)}

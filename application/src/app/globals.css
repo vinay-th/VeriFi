@@ -29,6 +29,11 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --color-1: 0 100% 63%;
+    --color-2: 270 100% 63%;
+    --color-3: 210 100% 63%;
+    --color-4: 195 100% 63%;
+    --color-5: 90 100% 63%;
   }
 
   .dark {
@@ -56,6 +61,11 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --color-1: 0 100% 63%;
+    --color-2: 270 100% 63%;
+    --color-3: 210 100% 63%;
+    --color-4: 195 100% 63%;
+    --color-5: 90 100% 63%;
   }
 }
 
@@ -85,6 +95,12 @@
     font-weight: 700;
     line-height: 120%; /* 4.2rem */
   }
+  .mask {
+    mask-image: url('../../public/mask.svg');
+    mask-repeat: no-repeat;
+    background: linear-gradient(145deg, #15023e 33.36%, #7d4ee1 82.69%);
+    background-size: cover;
+  }
   .hero-sub-title {
     width: 32.5rem;
     color: var(--Text-alternate, #fff);
@@ -96,5 +112,14 @@
     font-style: normal;
     font-weight: 400;
     line-height: 150%; /* 1.6875rem */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }

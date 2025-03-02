@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 export default {
-  darkMode: 'class', // ✅ Fixed darkMode configuration
+  darkMode: ['class', 'class'], // ✅ Fixed darkMode configuration
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,12 +9,17 @@ export default {
   ],
   theme: {
     extend: {
+      animation: {
+        'ping-large': 'ping-large 1s ease-in-out infinite',
+        'move-left': 'move-left 25s linear infinite',
+        'move-right': 'move-right 15s linear infinite',
+      },
       fontFamily: {
         Instrument_Sans: ['Instrument_Sans', 'sans-serif'],
         Inter: ['Inter', 'sans-serif'],
       },
       colors: {
-        BGBlue: '#050024', // ✅ Added BG-Blue color
+        BGBlue: '#050024',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -55,6 +60,11 @@ export default {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        'color-1': 'hsl(var(--color-1))',
+        'color-2': 'hsl(var(--color-2))',
+        'color-3': 'hsl(var(--color-3))',
+        'color-4': 'hsl(var(--color-4))',
+        'color-5': 'hsl(var(--color-5))',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -63,6 +73,100 @@ export default {
       },
       borderImage: {
         gradient: 'linear-gradient(90deg, #7F51C4, #DE98F7, #D5C6FF) 1',
+      },
+      keyframes: {
+        'aurora-border': {
+          '0%, 100%': {
+            borderRadius: '37% 29% 27% 27% / 28% 25% 41% 37%',
+          },
+          '25%': {
+            borderRadius: '47% 29% 39% 49% / 61% 19% 66% 26%',
+          },
+          '50%': {
+            borderRadius: '57% 23% 47% 72% / 63% 17% 66% 33%',
+          },
+          '75%': {
+            borderRadius: '28% 49% 29% 100% / 93% 20% 64% 25%',
+          },
+        },
+        'aurora-1': {
+          '0%, 100%': {
+            top: '0',
+            right: '0',
+          },
+          '50%': {
+            top: '50%',
+            right: '25%',
+          },
+          '75%': {
+            top: '25%',
+            right: '50%',
+          },
+        },
+        'aurora-2': {
+          '0%, 100%': {
+            top: '0',
+            left: '0',
+          },
+          '60%': {
+            top: '75%',
+            left: '25%',
+          },
+          '85%': {
+            top: '50%',
+            left: '50%',
+          },
+        },
+        'aurora-3': {
+          '0%, 100%': {
+            bottom: '0',
+            left: '0',
+          },
+          '40%': {
+            bottom: '50%',
+            left: '25%',
+          },
+          '65%': {
+            bottom: '25%',
+            left: '50%',
+          },
+        },
+        'aurora-4': {
+          '0%, 100%': {
+            bottom: '0',
+            right: '0',
+          },
+          '50%': {
+            bottom: '25%',
+            right: '40%',
+          },
+          '90%': {
+            bottom: '50%',
+            right: '25%',
+          },
+        },
+        'ping-large': {
+          '75%, 100%': {
+            transform: 'scale(3)',
+            opacity: '0',
+          },
+        },
+        'move-left': {
+          '0%': {
+            transform: 'translateX(0)',
+          },
+          '100%': {
+            transform: 'translateX(-50%)',
+          },
+        },
+        'move-right': {
+          '0%': {
+            transform: 'translateX(-50%)',
+          },
+          '100%': {
+            transform: 'translateX(0)',
+          },
+        },
       },
     },
   },
