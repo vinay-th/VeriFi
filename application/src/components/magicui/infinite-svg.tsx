@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 interface InfiniteSVGScrollerProps {
-  svgSources: string[];
+  svgSources: { src: string; width: number; height: number }[];
   scrollSpeed?: number;
   itemWidth?: number;
   gap?: number;
@@ -50,11 +51,13 @@ const InfiniteSVGScroller: React.FC<InfiniteSVGScrollerProps> = ({
         }}
       >
         {/* Duplicate the array to make the transition seamless */}
-        {[...svgSources, ...svgSources, ...svgSources].map((svgSrc, index) => (
-          <img
+        {[...svgSources, ...svgSources, ...svgSources].map((svg, index) => (
+          <Image
             key={index}
-            src={svgSrc}
+            src={svg.src}
             alt={`SVG ${index}`}
+            width={svg.width}
+            height={svg.height}
             style={{
               width: `${itemWidth}px`,
               height: 'auto',

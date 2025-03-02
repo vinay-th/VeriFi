@@ -71,11 +71,11 @@ const HeroSection = () => {
   }, []);
 
   const svgSources = [
-    next.src,
-    typecsript.src,
-    ipfs.src,
-    ethereum.src,
-    metamask.src,
+    { src: next.src, width: 100, height: 100 },
+    { src: typecsript.src, width: 100, height: 100 },
+    { src: ipfs.src, width: 100, height: 100 },
+    { src: ethereum.src, width: 100, height: 100 },
+    { src: metamask.src, width: 100, height: 100 },
   ];
 
   return (
@@ -138,7 +138,7 @@ const HeroSection = () => {
             </div>
           </div>
         </div>
-        <div className="relative flex w-full flex-col items-center justify-center overflow-hidden mt-10 mb-10 h-56">
+        <div className="relative flex w-full flex-col items-center justify-center overflow-hidden mt-10 mb-10 h-52">
           <div className="rotate-[-5deg]">
             <InfiniteSVGScroller
               svgSources={svgSources}
