@@ -123,7 +123,7 @@ const HeroSection = () => {
 
             <div ref={btnRef} className="flex flex-row items-center gap-4">
               <AnimatedButton
-                classes="bg-BGBlue text-white text-lg mt-8 whitespace-nowrap overflow-hidden text-ellipsis"
+                classes="bg-BGBlue text-white text-lg mt-8 whitespace-nowrap overflow-hidden text-ellipsis h-10"
                 onClick={() => console.log('Clicked')}
               >
                 Get Started <RiArrowRightSLine />
@@ -138,7 +138,7 @@ const HeroSection = () => {
             </div>
           </div>
         </div>
-        <div className="relative flex w-full flex-col items-center justify-center overflow-hidden mt-10 mb-10 h-52">
+        <div className="relative flex w-full flex-col items-center justify-center overflow-visible my-10 mt-20 h-52">
           <div className="rotate-[-5deg]">
             <InfiniteSVGScroller
               svgSources={svgSources}
