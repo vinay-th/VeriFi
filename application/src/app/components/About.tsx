@@ -1,35 +1,124 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import aboutBg from '@/../public/aboutBg.png';
 import about from '@/../public/about.png';
+import asset from '@/../public/asset.png';
 import AnimatedButton from '@/components/my-ui/animated-button';
 import Security from '@/../public/svgs/security-check.svg';
 import Image from 'next/image';
-import { RiArrowRightSLine } from 'react-icons/ri';
+import { RiArrowRightSLine, RiFileDamageLine } from 'react-icons/ri';
+import { IoExtensionPuzzleOutline } from 'react-icons/io5';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { AnimatedShinyText } from '@/components/magicui/animated-shiny-text';
+import { cn } from '@/lib/utils';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const About = () => {
+  const titleRef = useRef(null);
+  const subtitleRef = useRef(null);
+  const textRef = useRef(null);
+  const imageRef = useRef(null);
+
+  useEffect(() => {
+    gsap.fromTo(
+      titleRef.current,
+      { opacity: 0, y: 50 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 1.5,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: titleRef.current,
+          start: 'top 80%',
+        },
+      }
+    );
+
+    gsap.fromTo(
+      subtitleRef.current,
+      { opacity: 0, y: 50 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 1.5,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: subtitleRef.current,
+          start: 'top 80%',
+        },
+      }
+    );
+
+    gsap.fromTo(
+      textRef.current,
+      { opacity: 0, y: 50 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 1.5,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: textRef.current,
+          start: 'top 80%',
+        },
+      }
+    );
+
+    gsap.fromTo(
+      imageRef.current,
+      { opacity: 0, rotate: '20deg' },
+      {
+        opacity: 1,
+        rotate: '10deg',
+        duration: 1.5,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: imageRef.current,
+          start: 'top 80%',
+        },
+      }
+    );
+  }, []);
+
+  const showBox =
+    (className: string) => (e: React.MouseEvent<HTMLDivElement>) => {
+      const target = e.target as HTMLElement;
+      const group = target.closest(`.${className}`) as HTMLElement;
+      if (group) {
+        const box = group.querySelector('.group') as HTMLElement;
+        if (box) {
+          box.classList.remove('hidden');
+        }
+      }
+    };
+
   return (
-    <div className="relative mt-20 flex flex-col items-center">
-      <h1 className="text-4xl font-bold text-center">
+    <div className="relative mt-20 flex flex-col items-center ">
+      <h1 ref={titleRef} className="text-4xl font-bold text-center">
         Securely Store Your Credentials with <br />
         Cutting-Edge Blockchain Technology
       </h1>
-      <p className="text-center mt-[0.62rem] text-xl opacity-50 font-medium">
+      <p
+        ref={subtitleRef}
+        className="text-center mt-[0.62rem] text-xl opacity-50 font-medium"
+      >
         Use social login integrations, lower user friction,
         <br /> and facilitate more transactions.
       </p>
       <div
-        className="flex flex-row w-[1280px] h-[567px] bg-cover mt-10 bg-center"
+        className="flex flex-row w-[1280px] h-[567px] bg-cover mt-10 bg-center border border-white-500 rounded-3xl"
         style={{
           backgroundImage: `url(${aboutBg.src})`,
-          WebkitMaskImage:
-            'radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)',
-          maskImage:
-            'radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)',
         }}
       >
-        <div className="w-[640px] z-10 h-[567px]opacity-50 flex flex-col justify-left items-left pl-[3.5rem]">
-          <div className="inline-flex items-center text-white text-[2.5rem] font-medium mt-[9.4rem] whitespace-nowrap">
+        <div className="w-[640px] z-10 h-[567px] opacity-50 flex flex-col justify-left items-left pl-[3.5rem]">
+          <div
+            ref={textRef}
+            className="inline-flex items-center text-white text-[2.5rem] font-medium mt-[9.4rem] whitespace-nowrap"
+          >
             Optimized for security&nbsp;
             <Image src={Security} alt="security" width="45" className="pt-2" />
           </div>
@@ -47,6 +136,7 @@ const About = () => {
           </AnimatedButton>
         </div>
         <Image
+          ref={imageRef}
           src={about}
           alt=""
           width={700}
@@ -57,6 +147,48 @@ const About = () => {
             userSelect: 'none',
           }}
         />
+      </div>
+      <div className="flex flex-row w-[1280px] h-[567px] bg-cover mt-10 bg-center justify-between">
+        <div className="w-[700px] z-10 h-[567px] flex flex-col justify-left items-left px-[3.5rem] py-[2.5rem] border border-white-500 rounded-3xl">
+          <div
+            ref={textRef}
+            className="inline-flex items-center text-white text-[2.5rem] font-medium whitespace-nowrap"
+          >
+            Extensibility&nbsp;
+            <IoExtensionPuzzleOutline />
+          </div>
+
+          <span className="text-white text-2xl mt-6 opacity-60 w-[28.5rem]">
+            VeriFi&apos;s modular design allows easy integration of new
+            blockchains, verification services, and custom workflows.
+          </span>
+          <div
+            className="w-full relative z-10 h-[18.8rem]  flex flex-col justify-left items-left pl-[3.5rem] mt-[2.5rem] border border-white-500 rounded-3xl"
+            style={{
+              backgroundImage: `url(${asset.src})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            <div
+              className={cn(
+                'asset-2 group absolute top-[2rem] left-[14rem] rounded-full border text-base text-white transition-all ease-in hover:cursor-pointer  border-white/5 bg-neutral-900 hover:bg-neutral-800 w-[16rem] h-[2rem] items-center justify-center hidden'
+              )}
+            >
+              <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:duration-300 hover:text-neutral-400">
+                <RiFileDamageLine />
+                <span>&nbsp;The document is tampered</span>
+              </AnimatedShinyText>
+            </div>
+            <div
+              className="w-12 h-12 rounded-full bg-slate-200 absolute top-[5.8rem] left-[20.75rem]"
+              onMouseMove={showBox('asset-2')}
+            />
+
+            <div className="w-12 h-12 rounded-full bg-slate-200 absolute top-[8rem] left-[7.75rem]" />
+          </div>
+        </div>
+        <div className="w-[500px] z-10 h-[567px] flex flex-col justify-left items-left pl-[3.5rem] border border-white-500 rounded-3xl"></div>
       </div>
     </div>
   );
