@@ -1,98 +1,111 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract VeriFi {
-    error NotVerifiedAdmin();
-    error EmptyIpfsHash();
-    error DocumentNotFound();
-    error AccessNotRequested();
-    error AccessNotGranted();
-    error CertificateAlreadyMinted();
-    error DocumentNotVerified();
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
-    address public admin;
-    mapping(address => bool) public verifiedAdmins;
-    mapping(address => string[]) public studentDocuments;
-    mapping(bytes32 => bool) public verifiedDocuments;
-    mapping(bytes32 => address) public documentOwners;
-    mapping(address => mapping(address => bool)) public accessRequests;
-    mapping(address => mapping(address => bool)) public accessGrants;
-    mapping(bytes32 => bool) public mintedCertificates;
+/**
+ * @title VeriFi - A Blockchain-Based Document Verification System
+ * @dev This contract allows admins to upload, verify, and revoke documents.
+ * Documents are stored on IPFS, and their hashes are stored on-chain.
+ * Role-based access control is implemented using OpenZeppelin's AccessControl.
+ */
+contract VeriFi is AccessControl {
+    using Strings for string;
 
-    event DocumentUploaded(address indexed student, string ipfsHash, bytes32 docHash);
-    event DocumentVerified(bytes32 indexed docHash);
-    event AccessRequested(address indexed student, address indexed employer);
-    event AccessGranted(address indexed student, address indexed employer);
-    event AccessRevoked(address indexed student, address indexed employer);
-    event CertificateMinted(bytes32 indexed docHash);
+    // Roles
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    modifier onlyAdmin() {
-        if (!verifiedAdmins[msg.sender]) {
-            revert NotVerifiedAdmin();
-        }
-        _;
+    // Document structure
+    struct Document {
+        string name; // Document name
+        string issuer; // Issuer of the document
+        uint256 timestamp; // Timestamp of upload
+        string ipfsHash; // IPFS hash of the document
+        bool isVerified; // Verification status
+        bool isRevoked; // Revocation status
+        string revocationReason; // Reason for revocation
     }
 
-    modifier onlyOwner(bytes32 docHash) {
-        require(documentOwners[docHash] == msg.sender, "Not the document owner");
-        _;
-    }
+    // Mapping from document ID to Document
+    mapping(uint256 => Document) public documents;
 
+    // Document ID counter
+    uint256 public documentCounter;
+
+    // Events
+    event DocumentUploaded(uint256 indexed documentId, string name, string issuer, string ipfsHash, uint256 timestamp);
+    event DocumentVerified(uint256 indexed documentId, address indexed admin);
+    event DocumentRevoked(uint256 indexed documentId, address indexed admin, string reason);
+
+    /**
+     * @dev Constructor to initialize the contract and grant the deployer the default admin role.
+     */
     constructor() {
-        admin = msg.sender;
-        verifiedAdmins[msg.sender] = true;
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
     }
 
-    function addVerifiedAdmin(address _admin) external onlyAdmin {
-        verifiedAdmins[_admin] = true;
+    /**
+     * @dev Upload a document to the contract.
+     * @param name The name of the document.
+     * @param issuer The issuer of the document.
+     * @param ipfsHash The IPFS hash of the document.
+     */
+    function uploadDocument(string memory name, string memory issuer, string memory ipfsHash) external onlyRole(ADMIN_ROLE) {
+        require(bytes(ipfsHash).length > 0, "IPFS hash cannot be empty");
+
+        documentCounter++;
+        documents[documentCounter] = Document({
+            name: name,
+            issuer: issuer,
+            timestamp: block.timestamp,
+            ipfsHash: ipfsHash,
+            isVerified: false,
+            isRevoked: false,
+            revocationReason: ""
+        });
+
+        emit DocumentUploaded(documentCounter, name, issuer, ipfsHash, block.timestamp);
     }
 
-    function uploadDocument(string memory ipfsHash) external returns (bytes32 docHash) {
-        if (bytes(ipfsHash).length == 0) {
-            revert EmptyIpfsHash();
-        }
-        docHash = keccak256(abi.encodePacked(ipfsHash, msg.sender));
-        documentOwners[docHash] = msg.sender;
-        studentDocuments[msg.sender].push(ipfsHash);
-        emit DocumentUploaded(msg.sender, ipfsHash, docHash);
-        return docHash; // Fix: Return docHash to match test expectations
+    /**
+     * @dev Verify a document.
+     * @param documentId The ID of the document to verify.
+     */
+    function verifyDocument(uint256 documentId) external onlyRole(ADMIN_ROLE) {
+        require(documentId > 0 && documentId <= documentCounter, "Invalid document ID");
+        require(!documents[documentId].isRevoked, "Document is revoked");
+
+        documents[documentId].isVerified = true;
+        emit DocumentVerified(documentId, msg.sender);
     }
 
-    function verifyDocument(bytes32 docHash) external onlyAdmin {
-        if (documentOwners[docHash] == address(0)) {
-            revert DocumentNotFound();
-        }
-        verifiedDocuments[docHash] = true;
-        emit DocumentVerified(docHash);
+    /**
+     * @dev Revoke a document.
+     * @param documentId The ID of the document to revoke.
+     * @param reason The reason for revocation.
+     */
+    function revokeDocument(uint256 documentId, string memory reason) external onlyRole(ADMIN_ROLE) {
+        require(documentId > 0 && documentId <= documentCounter, "Invalid document ID");
+        require(!documents[documentId].isRevoked, "Document is already revoked");
+
+        documents[documentId].isRevoked = true;
+        documents[documentId].revocationReason = reason;
+        emit DocumentRevoked(documentId, msg.sender, reason);
     }
 
-    function requestAccess(address student) external {
-        require(msg.sender != student, "Cannot request access to own documents");
-        accessRequests[student][msg.sender] = true;
-        emit AccessRequested(student, msg.sender);
-    }
+    /**
+     * @dev Query the verification status of a document.
+     * @param documentId The ID of the document to query.
+     * @return isVerified Whether the document is verified.
+     * @return isRevoked Whether the document is revoked.
+     * @return revocationReason The reason for revocation (if applicable).
+     */
+    function queryDocumentStatus(uint256 documentId) external view returns (bool isVerified, bool isRevoked, string memory revocationReason) {
+        require(documentId > 0 && documentId <= documentCounter, "Invalid document ID");
 
-    function grantAccess(address employer) external {
-        require(accessRequests[msg.sender][employer], "No access request found");
-        accessRequests[msg.sender][employer] = false;
-        accessGrants[msg.sender][employer] = true;
-        emit AccessGranted(msg.sender, employer);
-    }
-
-    function revokeAccess(address employer) external {
-        require(accessGrants[msg.sender][employer], "No granted access to revoke");
-        accessGrants[msg.sender][employer] = false;
-        emit AccessRevoked(msg.sender, employer);
-    }
-
-    function mintCertificate(bytes32 docHash) external onlyAdmin {
-        if (!verifiedDocuments[docHash]) {
-            revert DocumentNotVerified();
-        }
-        if (mintedCertificates[docHash]) {
-            revert CertificateAlreadyMinted();
-        }
-        mintedCertificates[docHash] = true;
-        emit CertificateMinted(docHash);
+        Document memory doc = documents[documentId];
+        return (doc.isVerified, doc.isRevoked, doc.revocationReason);
     }
 }
