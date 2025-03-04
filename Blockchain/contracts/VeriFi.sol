@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
  * @title VeriFi - A Blockchain-Based Document Verification System
  * @dev This contract allows admins to upload, retrieve, and delete documents.
  * Role-based access control is implemented using OpenZeppelin's AccessControl.
+ * It ensures document uniqueness, admin management, and secure document handling.
  */
 contract VeriFi is AccessControl {
     using Strings for string;
@@ -17,10 +18,10 @@ contract VeriFi is AccessControl {
 
     // Document structure
     struct Document {
-        string title; // Document title
-        string description; // Document description
-        string documentType; // Document type
-        address uploader; // Address of the admin who uploaded the document
+        string title;           // Document title
+        string description;     // Document description
+        string documentType;    // Document type
+        address uploader;       // Address of the admin who uploaded the document
     }
 
     // Mapping from document ID to Document
@@ -37,6 +38,7 @@ contract VeriFi is AccessControl {
 
     /**
      * @dev Constructor to initialize the contract and grant the deployer the default admin role.
+     * Also grants the deployer the ADMIN_ROLE.
      */
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -49,6 +51,8 @@ contract VeriFi is AccessControl {
      * @param title The title of the document.
      * @param description The description of the document.
      * @param documentType The type of the document.
+     * @notice Only admins can upload documents.
+     * @notice Reverts if the document ID already exists or if title/documentType are empty.
      */
     function uploadDocument(uint256 documentId, string memory title, string memory description, string memory documentType) external onlyRole(ADMIN_ROLE) {
         require(!documentExists[documentId], "Document already exists");
@@ -69,8 +73,14 @@ contract VeriFi is AccessControl {
     /**
      * @dev Retrieve a document by its ID.
      * @param documentId The unique identifier for the document.
+     * @return title The title of the document.
+     * @return description The description of the document.
+     * @return documentType The type of the document.
+     * @return uploader The address of the admin who uploaded the document.
+     * @notice Only admins can retrieve documents.
+     * @notice Reverts if the document does not exist.
      */
-    function retrieveDocument(uint256 documentId) external view onlyRole(ADMIN_ROLE) returns (string memory, string memory, string memory, address) {
+    function retrieveDocument(uint256 documentId) external view onlyRole(ADMIN_ROLE) returns (string memory title, string memory description, string memory documentType, address uploader) {
         require(documentExists[documentId], "Document does not exist");
 
         Document memory doc = documents[documentId];
@@ -80,6 +90,8 @@ contract VeriFi is AccessControl {
     /**
      * @dev Delete a document by its ID.
      * @param documentId The unique identifier for the document.
+     * @notice Only the uploader admin can delete the document.
+     * @notice Reverts if the document does not exist or if the caller is not the uploader.
      */
     function deleteDocument(uint256 documentId) external onlyRole(ADMIN_ROLE) {
         require(documentExists[documentId], "Document does not exist");
@@ -93,6 +105,7 @@ contract VeriFi is AccessControl {
     /**
      * @dev Add a new admin.
      * @param admin The address of the new admin.
+     * @notice Only the default admin can add new admins.
      */
     function addAdmin(address admin) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(ADMIN_ROLE, admin);
@@ -102,6 +115,7 @@ contract VeriFi is AccessControl {
     /**
      * @dev Remove an admin.
      * @param admin The address of the admin to remove.
+     * @notice Only the default admin can remove admins.
      */
     function removeAdmin(address admin) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _revokeRole(ADMIN_ROLE, admin);
