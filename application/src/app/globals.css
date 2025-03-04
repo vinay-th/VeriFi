@@ -122,6 +122,20 @@
     -webkit-backdrop-filter: blur(7.6px);
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
+  .mask-gradient {
+    mask-image: radial-gradient(
+      circle at center,
+      black 0%,
+      black 60%,
+      transparent 80%
+    );
+    -webkit-mask-image: radial-gradient(
+      circle at center,
+      black 0%,
+      black 60%,
+      transparent 80%
+    );
+  }
 }
 
 @layer base {

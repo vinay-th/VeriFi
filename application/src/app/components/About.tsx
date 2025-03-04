@@ -1,17 +1,22 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
 import aboutBg from '@/../public/aboutBg.png';
+import media from '@/../public/media.png';
 import about from '@/../public/about.png';
 import asset from '@/../public/asset.png';
 import AnimatedButton from '@/components/my-ui/animated-button';
 import Security from '@/../public/svgs/security-check.svg';
 import Image from 'next/image';
 import { RiArrowRightSLine, RiFileDamageLine } from 'react-icons/ri';
-import { IoExtensionPuzzleOutline } from 'react-icons/io5';
+import { IoExtensionPuzzleOutline, IoOptionsSharp } from 'react-icons/io5';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { AnimatedShinyText } from '@/components/magicui/animated-shiny-text';
 import { cn } from '@/lib/utils';
+// import OrbitingIcons from '@/components/my-ui/orbiting-icons';
+// import { FaGithub, FaInstagram, FaLinkedinIn, FaX } from 'react-icons/fa6';
+
+// import Logo from '@/../public/Logo.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -83,17 +88,7 @@ const About = () => {
     );
   }, []);
 
-  const showBox =
-    (className: string) => (e: React.MouseEvent<HTMLDivElement>) => {
-      const target = e.target as HTMLElement;
-      const group = target.closest(`.${className}`) as HTMLElement;
-      if (group) {
-        const box = group.querySelector('.group') as HTMLElement;
-        if (box) {
-          box.classList.remove('hidden');
-        }
-      }
-    };
+  const [hovered, setHovered] = React.useState(false);
 
   return (
     <div className="relative mt-20 flex flex-col items-center ">
@@ -170,25 +165,54 @@ const About = () => {
               backgroundPosition: 'center',
             }}
           >
+            {hovered && (
+              <div
+                className={cn(
+                  'absolute top-[2rem] left-[14rem] rounded-full border text-base text-white transition-all ease-in border-white/5 bg-neutral-900 hover:bg-neutral-800 w-[16rem] h-[2rem] flex items-center justify-center'
+                )}
+              >
+                <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:duration-300 hover:text-neutral-400">
+                  <RiFileDamageLine />
+                  <span>&nbsp;The document is tampered</span>
+                </AnimatedShinyText>
+              </div>
+            )}
             <div
-              className={cn(
-                'asset-2 group absolute top-[2rem] left-[14rem] rounded-full border text-base text-white transition-all ease-in hover:cursor-pointer  border-white/5 bg-neutral-900 hover:bg-neutral-800 w-[16rem] h-[2rem] items-center justify-center hidden'
-              )}
-            >
-              <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:duration-300 hover:text-neutral-400">
-                <RiFileDamageLine />
-                <span>&nbsp;The document is tampered</span>
-              </AnimatedShinyText>
-            </div>
-            <div
-              className="w-12 h-12 rounded-full bg-slate-200 absolute top-[5.8rem] left-[20.75rem]"
-              onMouseMove={showBox('asset-2')}
+              className="w-12 h-12 rounded-full bg-transparent absolute top-[5.8rem] left-[20.75rem]"
+              onMouseEnter={() => setHovered(true)}
+              onMouseLeave={() => setHovered(false)}
             />
-
-            <div className="w-12 h-12 rounded-full bg-slate-200 absolute top-[8rem] left-[7.75rem]" />
           </div>
         </div>
-        <div className="w-[500px] z-10 h-[567px] flex flex-col justify-left items-left pl-[3.5rem] border border-white-500 rounded-3xl"></div>
+        <div
+          className="w-[500px] z-10 h-[567px] flex flex-col justify-left items-left px-[3.5rem] py-[2.5rem] border border-white-500 rounded-3xl"
+          style={{
+            backgroundImage: `url(${media.src})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div
+            ref={textRef}
+            className="inline-flex items-center text-white text-[2.5rem] font-medium whitespace-nowrap"
+          >
+            Infinite Options&nbsp;
+            <IoOptionsSharp />
+          </div>
+
+          <span className="text-white text-2xl mt-6 opacity-60 w-[28.5rem]">
+            VeriFi&apos;s provides multiple usecases and options for users to
+            choose from.
+          </span>
+          {/* <OrbitingIcons
+            icons={[FaGithub, FaLinkedinIn, FaInstagram, FaX]}
+            urls={['/star', '/sparkle', '/globe', '/rocket']}
+            width={300}
+            centralLogo={
+              <Image src={Logo} className="h-12 w-12" alt="Central Logo" />
+            }
+          /> */}
+        </div>
       </div>
     </div>
   );
