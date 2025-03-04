@@ -13,7 +13,6 @@ describe("VeriFi", function () {
 
         VeriFi = await ethers.getContractFactory("VeriFi");
         veriFi = await VeriFi.deploy();
-        await veriFi.deployed();
     });
 
     // Admin Management Tests
@@ -101,7 +100,7 @@ describe("VeriFi", function () {
     it("Should measure gas usage for document upload", async function () {
         const tx = await veriFi.connect(admin).uploadDocument(6, "Title", "Description", "Type");
         const receipt = await tx.wait();
-        expect(receipt.gasUsed).to.be.lessThan(ethers.BigNumber.from("200000"));
+        expect(receipt.gasUsed).to.be.lessThan(200000); // Directly compare with a number
     });
 
     // Security Tests
