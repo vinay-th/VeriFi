@@ -1,9 +1,15 @@
-import { SignIn } from '@clerk/nextjs';
+import { ClerkProvider, SignIn } from '@clerk/nextjs';
 
 export default function SignInPage() {
   return (
-    <div className="flex justify-center items-center">
-      <SignIn routing="path" path="/sign-in" />
-    </div>
+    <ClerkProvider>
+      <div className="flex justify-center items-center">
+        <SignIn
+          routing="path"
+          path="/sign-in"
+          forceRedirectUrl={'/get-started'}
+        />
+      </div>
+    </ClerkProvider>
   );
 }

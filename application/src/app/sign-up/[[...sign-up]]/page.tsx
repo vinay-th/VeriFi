@@ -1,9 +1,15 @@
-import { SignUp } from '@clerk/nextjs';
+import { ClerkProvider, SignUp } from '@clerk/nextjs';
 
 export default function SignUpPage() {
   return (
-    <div className="flex justify-center items-center">
-      <SignUp routing="path" path="/sign-up" />
-    </div>
+    <ClerkProvider>
+      <div className="flex justify-center items-center">
+        <SignUp
+          routing="path"
+          path="/sign-up"
+          forceRedirectUrl={'/get-started'}
+        />
+      </div>
+    </ClerkProvider>
   );
 }

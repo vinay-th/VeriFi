@@ -15,6 +15,7 @@ import typecsript from '@/../public/Tech/typecsript.svg';
 import ipfs from '@/../public/Tech/ipfs.svg';
 import ethereum from '@/../public/Tech/ethereum.svg';
 import metamask from '@/../public/Tech/metamask.svg';
+import Link from 'next/link';
 
 const HeroSection = () => {
   const { x, y } = useMousePosition();
@@ -122,19 +123,21 @@ const HeroSection = () => {
             </p>
 
             <div ref={btnRef} className="flex flex-row items-center gap-4">
-              <AnimatedButton
-                classes="bg-BGBlue text-white text-lg mt-8 whitespace-nowrap overflow-hidden text-ellipsis h-10"
-                onClick={() => console.log('Clicked')}
-              >
-                Get Started <RiArrowRightSLine />
-              </AnimatedButton>
-              <Button
-                variant={'invert'}
-                className="rounded-full text-white text-lg mt-8"
-                onClick={() => console.log('Clicked')}
-              >
-                Learn More
-              </Button>
+              <Link href="/get-started">
+                <AnimatedButton classes="bg-BGBlue text-white text-lg mt-8 whitespace-nowrap overflow-hidden text-ellipsis h-10">
+                  Get Started <RiArrowRightSLine />
+                </AnimatedButton>
+              </Link>
+              <div className="text-white text-lg">
+                <Link href="/get-started">
+                  <Button
+                    variant={'invert'}
+                    className="rounded-full text-white text-lg mt-8"
+                  >
+                    Learn More
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
