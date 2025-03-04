@@ -1,98 +1,110 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract VeriFi {
-    error NotVerifiedAdmin();
-    error EmptyIpfsHash();
-    error DocumentNotFound();
-    error AccessNotRequested();
-    error AccessNotGranted();
-    error CertificateAlreadyMinted();
-    error DocumentNotVerified();
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
-    address public admin;
-    mapping(address => bool) public verifiedAdmins;
-    mapping(address => string[]) public studentDocuments;
-    mapping(bytes32 => bool) public verifiedDocuments;
-    mapping(bytes32 => address) public documentOwners;
-    mapping(address => mapping(address => bool)) public accessRequests;
-    mapping(address => mapping(address => bool)) public accessGrants;
-    mapping(bytes32 => bool) public mintedCertificates;
+/**
+ * @title VeriFi - A Blockchain-Based Document Verification System
+ * @dev This contract allows admins to upload, retrieve, and delete documents.
+ * Role-based access control is implemented using OpenZeppelin's AccessControl.
+ */
+contract VeriFi is AccessControl {
+    using Strings for string;
 
-    event DocumentUploaded(address indexed student, string ipfsHash, bytes32 docHash);
-    event DocumentVerified(bytes32 indexed docHash);
-    event AccessRequested(address indexed student, address indexed employer);
-    event AccessGranted(address indexed student, address indexed employer);
-    event AccessRevoked(address indexed student, address indexed employer);
-    event CertificateMinted(bytes32 indexed docHash);
+    // Roles
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    modifier onlyAdmin() {
-        if (!verifiedAdmins[msg.sender]) {
-            revert NotVerifiedAdmin();
-        }
-        _;
+    // Document structure
+    struct Document {
+        string title; // Document title
+        string description; // Document description
+        string documentType; // Document type
+        address uploader; // Address of the admin who uploaded the document
     }
 
-    modifier onlyOwner(bytes32 docHash) {
-        require(documentOwners[docHash] == msg.sender, "Not the document owner");
-        _;
-    }
+    // Mapping from document ID to Document
+    mapping(uint256 => Document) public documents;
 
+    // Mapping to track document existence
+    mapping(uint256 => bool) public documentExists;
+
+    // Events
+    event DocumentUploaded(uint256 indexed documentId, string title, string description, string documentType, address indexed uploader);
+    event DocumentDeleted(uint256 indexed documentId, address indexed admin);
+    event AdminAdded(address indexed admin);
+    event AdminRemoved(address indexed admin);
+
+    /**
+     * @dev Constructor to initialize the contract and grant the deployer the default admin role.
+     */
     constructor() {
-        admin = msg.sender;
-        verifiedAdmins[msg.sender] = true;
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
     }
 
-    function addVerifiedAdmin(address _admin) external onlyAdmin {
-        verifiedAdmins[_admin] = true;
+    /**
+     * @dev Upload a document to the contract.
+     * @param documentId The unique identifier for the document.
+     * @param title The title of the document.
+     * @param description The description of the document.
+     * @param documentType The type of the document.
+     */
+    function uploadDocument(uint256 documentId, string memory title, string memory description, string memory documentType) external onlyRole(ADMIN_ROLE) {
+        require(!documentExists[documentId], "Document already exists");
+        require(bytes(title).length > 0, "Title cannot be empty");
+        require(bytes(documentType).length > 0, "Document type cannot be empty");
+
+        documents[documentId] = Document({
+            title: title,
+            description: description,
+            documentType: documentType,
+            uploader: msg.sender
+        });
+
+        documentExists[documentId] = true;
+        emit DocumentUploaded(documentId, title, description, documentType, msg.sender);
     }
 
-    function uploadDocument(string memory ipfsHash) external returns (bytes32 docHash) {
-        if (bytes(ipfsHash).length == 0) {
-            revert EmptyIpfsHash();
-        }
-        docHash = keccak256(abi.encodePacked(ipfsHash, msg.sender));
-        documentOwners[docHash] = msg.sender;
-        studentDocuments[msg.sender].push(ipfsHash);
-        emit DocumentUploaded(msg.sender, ipfsHash, docHash);
-        return docHash; // Fix: Return docHash to match test expectations
+    /**
+     * @dev Retrieve a document by its ID.
+     * @param documentId The unique identifier for the document.
+     */
+    function retrieveDocument(uint256 documentId) external view onlyRole(ADMIN_ROLE) returns (string memory, string memory, string memory, address) {
+        require(documentExists[documentId], "Document does not exist");
+
+        Document memory doc = documents[documentId];
+        return (doc.title, doc.description, doc.documentType, doc.uploader);
     }
 
-    function verifyDocument(bytes32 docHash) external onlyAdmin {
-        if (documentOwners[docHash] == address(0)) {
-            revert DocumentNotFound();
-        }
-        verifiedDocuments[docHash] = true;
-        emit DocumentVerified(docHash);
+    /**
+     * @dev Delete a document by its ID.
+     * @param documentId The unique identifier for the document.
+     */
+    function deleteDocument(uint256 documentId) external onlyRole(ADMIN_ROLE) {
+        require(documentExists[documentId], "Document does not exist");
+        require(documents[documentId].uploader == msg.sender, "Only the uploader can delete the document");
+
+        delete documents[documentId];
+        delete documentExists[documentId];
+        emit DocumentDeleted(documentId, msg.sender);
     }
 
-    function requestAccess(address student) external {
-        require(msg.sender != student, "Cannot request access to own documents");
-        accessRequests[student][msg.sender] = true;
-        emit AccessRequested(student, msg.sender);
+    /**
+     * @dev Add a new admin.
+     * @param admin The address of the new admin.
+     */
+    function addAdmin(address admin) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(ADMIN_ROLE, admin);
+        emit AdminAdded(admin);
     }
 
-    function grantAccess(address employer) external {
-        require(accessRequests[msg.sender][employer], "No access request found");
-        accessRequests[msg.sender][employer] = false;
-        accessGrants[msg.sender][employer] = true;
-        emit AccessGranted(msg.sender, employer);
-    }
-
-    function revokeAccess(address employer) external {
-        require(accessGrants[msg.sender][employer], "No granted access to revoke");
-        accessGrants[msg.sender][employer] = false;
-        emit AccessRevoked(msg.sender, employer);
-    }
-
-    function mintCertificate(bytes32 docHash) external onlyAdmin {
-        if (!verifiedDocuments[docHash]) {
-            revert DocumentNotVerified();
-        }
-        if (mintedCertificates[docHash]) {
-            revert CertificateAlreadyMinted();
-        }
-        mintedCertificates[docHash] = true;
-        emit CertificateMinted(docHash);
+    /**
+     * @dev Remove an admin.
+     * @param admin The address of the admin to remove.
+     */
+    function removeAdmin(address admin) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _revokeRole(ADMIN_ROLE, admin);
+        emit AdminRemoved(admin);
     }
 }
