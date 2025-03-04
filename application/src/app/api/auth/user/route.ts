@@ -1,6 +1,5 @@
 import { db } from '@/db';
 import { users } from '@/db/schema';
-import { createClerkClient } from '@clerk/nextjs/server';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -8,13 +7,8 @@ import { handle } from 'hono/vercel';
 import { Webhook } from 'svix';
 
 export const runtime = 'edge';
-const publishableKey = process.env.PLASMO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 const app = new Hono().basePath('/api/auth/user');
-
-const clerk = await createClerkClient({
-  publishableKey,
-});
 
 app.use(
   '*',
@@ -75,16 +69,16 @@ app.post('/', async (c) => {
     if (eventType === 'user.created') {
       const user_role = userData.public_metadata.role || 'student';
 
-      setTimeout(async () => {
-        try {
-          await clerk.users.updateUserMetadata(userData.id, {
-            publicMetadata: { role: user_role },
-          });
-          console.log('User role updated:', user_role);
-        } catch (err) {
-          console.error('Failed to update metadata:', err);
-        }
-      }, 10000);
+      await fetch(`https://api.clerk.dev/v1/users/${userData.id}/metadata`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          public_metadata: { role: user_role },
+        }),
+      });
 
       await db.insert(users).values({
         id: userData.id,
