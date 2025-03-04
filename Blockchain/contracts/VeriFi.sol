@@ -30,6 +30,9 @@ contract VeriFi is AccessControl {
     // Mapping from document ID to Document
     mapping(uint256 => Document) public documents;
 
+    // Mapping to ensure document uniqueness (IPFS hash -> document ID)
+    mapping(string => uint256) public documentHashes;
+
     // Document ID counter
     uint256 public documentCounter;
 
@@ -37,6 +40,8 @@ contract VeriFi is AccessControl {
     event DocumentUploaded(uint256 indexed documentId, string name, string issuer, string ipfsHash, uint256 timestamp);
     event DocumentVerified(uint256 indexed documentId, address indexed admin);
     event DocumentRevoked(uint256 indexed documentId, address indexed admin, string reason);
+    event AdminAdded(address indexed admin);
+    event AdminRemoved(address indexed admin);
 
     /**
      * @dev Constructor to initialize the contract and grant the deployer the default admin role.
@@ -54,6 +59,7 @@ contract VeriFi is AccessControl {
      */
     function uploadDocument(string memory name, string memory issuer, string memory ipfsHash) external onlyRole(ADMIN_ROLE) {
         require(bytes(ipfsHash).length > 0, "IPFS hash cannot be empty");
+        require(documentHashes[ipfsHash] == 0, "Document already exists");
 
         documentCounter++;
         documents[documentCounter] = Document({
@@ -66,6 +72,7 @@ contract VeriFi is AccessControl {
             revocationReason: ""
         });
 
+        documentHashes[ipfsHash] = documentCounter;
         emit DocumentUploaded(documentCounter, name, issuer, ipfsHash, block.timestamp);
     }
 
@@ -107,5 +114,23 @@ contract VeriFi is AccessControl {
 
         Document memory doc = documents[documentId];
         return (doc.isVerified, doc.isRevoked, doc.revocationReason);
+    }
+
+    /**
+     * @dev Add a new admin.
+     * @param admin The address of the new admin.
+     */
+    function addAdmin(address admin) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(ADMIN_ROLE, admin);
+        emit AdminAdded(admin);
+    }
+
+    /**
+     * @dev Remove an admin.
+     * @param admin The address of the admin to remove.
+     */
+    function removeAdmin(address admin) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _revokeRole(ADMIN_ROLE, admin);
+        emit AdminRemoved(admin);
     }
 }
