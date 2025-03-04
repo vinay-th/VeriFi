@@ -90,7 +90,7 @@ describe("VeriFi", function () {
     // Test Case 11: Verify that incorrect metadata is rejected
     it("Should reject incomplete metadata", async function () {
         await expect(
-            veriFi.connect(admin).uploadDocument("", "Issuer", "QmHash")
+            veriFi.connect(admin).uploadDocument("TestDoc", "Issuer", "")
         ).to.be.revertedWith("IPFS hash cannot be empty");
     });
 
@@ -105,8 +105,8 @@ describe("VeriFi", function () {
     it("Should handle multiple uploads efficiently", async function () {
         await veriFi.connect(admin).uploadDocument("Doc1", "Issuer1", "QmHash1");
         await veriFi.connect(admin).uploadDocument("Doc2", "Issuer2", "QmHash2");
-        const doc1 = await veriFi.documents(2);
-        const doc2 = await veriFi.documents(3);
+        const doc1 = await veriFi.documents(2); // Document ID 2
+        const doc2 = await veriFi.documents(3); // Document ID 3
         expect(doc1.name).to.equal("Doc1");
         expect(doc2.name).to.equal("Doc2");
     });
@@ -128,7 +128,7 @@ describe("VeriFi", function () {
     it("Should upload a document with maximum size", async function () {
         const largeHash = "Qm" + "a".repeat(64); // Simulate a large hash
         await veriFi.connect(admin).uploadDocument("LargeDoc", "Issuer", largeHash);
-        const doc = await veriFi.documents(4);
+        const doc = await veriFi.documents(4); // Document ID 4
         expect(doc.ipfsHash).to.equal(largeHash);
     });
 
@@ -137,15 +137,16 @@ describe("VeriFi", function () {
         for (let i = 0; i < 10; i++) {
             await veriFi.connect(admin).uploadDocument(`Doc${i}`, `Issuer${i}`, `QmHash${i}`);
         }
-        const doc = await veriFi.documents(14);
+        const doc = await veriFi.documents(14); // Document ID 14
         expect(doc.name).to.equal("Doc9");
     });
 
     // Test Case 18: Verify event emission on document upload
     it("Should emit an event on document upload", async function () {
+        const blockNumber = await ethers.provider.getBlockNumber();
         await expect(veriFi.connect(admin).uploadDocument("EventDoc", "Issuer", "QmEventHash"))
             .to.emit(veriFi, "DocumentUploaded")
-            .withArgs(15, "EventDoc", "Issuer", "QmEventHash", ethers.BigNumber.from(await ethers.provider.getBlockNumber()));
+            .withArgs(15, "EventDoc", "Issuer", "QmEventHash", blockNumber + 1);
     });
 
     // Test Case 19: Verify event emission on admin addition/removal
@@ -164,8 +165,10 @@ describe("VeriFi", function () {
 
     // Test Case 21: Verify that a document can be revoked by an admin
     it("Should allow admin to revoke a document", async function () {
-        await veriFi.connect(admin).revokeDocument(1, "Invalid");
-        const doc = await veriFi.documents(1);
+        await veriFi.connect(admin).uploadDocument("RevokeDoc", "Issuer", "QmRevokeHash");
+        const docId = documentCounter; // Use the latest document ID
+        await veriFi.connect(admin).revokeDocument(docId, "Invalid");
+        const doc = await veriFi.documents(docId);
         expect(doc.isRevoked).to.equal(true);
         expect(doc.revocationReason).to.equal("Invalid");
     });
