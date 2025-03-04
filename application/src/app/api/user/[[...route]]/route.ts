@@ -4,7 +4,7 @@ import { desc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { handle } from 'hono/vercel';
-import { keyAuth } from '../../../../middleware/keyAuth';
+import { keyAuth } from '../../../../../middleware/keyAuth';
 export const runtime = 'edge';
 
 const app = new Hono().basePath('/api/user');
@@ -115,6 +115,22 @@ app.patch('/', keyAuth, async (c) => {
   }
 
   return c.json({ message: 'User data updated', updatedFields: updateData });
+});
+
+app.get('/get-role', keyAuth, async (c) => {
+  const id = c.req.query('id');
+
+  if (!id) {
+    return c.json({ error: 'Missing user ID' }, 400);
+  }
+
+  const user = await db.select().from(users).where(eq(users.id, id));
+
+  if (user.length === 0) {
+    return c.json({ error: 'User not found' }, 404);
+  }
+
+  return c.json({ role: user[0].role });
 });
 
 export const GET = handle(app);
