@@ -6,8 +6,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title VeriFi - A Blockchain-Based Document Verification System
- * @dev This contract allows admins to upload, verify, and revoke documents.
- * Documents are stored on IPFS, and their hashes are stored on-chain.
+ * @dev This contract allows admins to upload, retrieve, and delete documents.
  * Role-based access control is implemented using OpenZeppelin's AccessControl.
  */
 contract VeriFi is AccessControl {
@@ -18,28 +17,21 @@ contract VeriFi is AccessControl {
 
     // Document structure
     struct Document {
-        string name; // Document name
-        string issuer; // Issuer of the document
-        uint256 timestamp; // Timestamp of upload
-        string ipfsHash; // IPFS hash of the document
-        bool isVerified; // Verification status
-        bool isRevoked; // Revocation status
-        string revocationReason; // Reason for revocation
+        string title; // Document title
+        string description; // Document description
+        string documentType; // Document type
+        address uploader; // Address of the admin who uploaded the document
     }
 
     // Mapping from document ID to Document
     mapping(uint256 => Document) public documents;
 
-    // Mapping to ensure document uniqueness (IPFS hash -> document ID)
-    mapping(string => uint256) public documentHashes;
-
-    // Document ID counter
-    uint256 public documentCounter;
+    // Mapping to track document existence
+    mapping(uint256 => bool) public documentExists;
 
     // Events
-    event DocumentUploaded(uint256 indexed documentId, string name, string issuer, string ipfsHash, uint256 timestamp);
-    event DocumentVerified(uint256 indexed documentId, address indexed admin);
-    event DocumentRevoked(uint256 indexed documentId, address indexed admin, string reason);
+    event DocumentUploaded(uint256 indexed documentId, string title, string description, string documentType, address indexed uploader);
+    event DocumentDeleted(uint256 indexed documentId, address indexed admin);
     event AdminAdded(address indexed admin);
     event AdminRemoved(address indexed admin);
 
@@ -53,67 +45,49 @@ contract VeriFi is AccessControl {
 
     /**
      * @dev Upload a document to the contract.
-     * @param name The name of the document.
-     * @param issuer The issuer of the document.
-     * @param ipfsHash The IPFS hash of the document.
+     * @param documentId The unique identifier for the document.
+     * @param title The title of the document.
+     * @param description The description of the document.
+     * @param documentType The type of the document.
      */
-    function uploadDocument(string memory name, string memory issuer, string memory ipfsHash) external onlyRole(ADMIN_ROLE) {
-        require(bytes(ipfsHash).length > 0, "IPFS hash cannot be empty");
-        require(documentHashes[ipfsHash] == 0, "Document already exists");
+    function uploadDocument(uint256 documentId, string memory title, string memory description, string memory documentType) external onlyRole(ADMIN_ROLE) {
+        require(!documentExists[documentId], "Document already exists");
+        require(bytes(title).length > 0, "Title cannot be empty");
+        require(bytes(documentType).length > 0, "Document type cannot be empty");
 
-        documentCounter++;
-        documents[documentCounter] = Document({
-            name: name,
-            issuer: issuer,
-            timestamp: block.timestamp,
-            ipfsHash: ipfsHash,
-            isVerified: false,
-            isRevoked: false,
-            revocationReason: ""
+        documents[documentId] = Document({
+            title: title,
+            description: description,
+            documentType: documentType,
+            uploader: msg.sender
         });
 
-        documentHashes[ipfsHash] = documentCounter;
-        emit DocumentUploaded(documentCounter, name, issuer, ipfsHash, block.timestamp);
+        documentExists[documentId] = true;
+        emit DocumentUploaded(documentId, title, description, documentType, msg.sender);
     }
 
     /**
-     * @dev Verify a document.
-     * @param documentId The ID of the document to verify.
+     * @dev Retrieve a document by its ID.
+     * @param documentId The unique identifier for the document.
      */
-    function verifyDocument(uint256 documentId) external onlyRole(ADMIN_ROLE) {
-        require(documentId > 0 && documentId <= documentCounter, "Invalid document ID");
-        require(!documents[documentId].isRevoked, "Document is revoked");
-
-        documents[documentId].isVerified = true;
-        emit DocumentVerified(documentId, msg.sender);
-    }
-
-    /**
-     * @dev Revoke a document.
-     * @param documentId The ID of the document to revoke.
-     * @param reason The reason for revocation.
-     */
-    function revokeDocument(uint256 documentId, string memory reason) external onlyRole(ADMIN_ROLE) {
-        require(documentId > 0 && documentId <= documentCounter, "Invalid document ID");
-        require(!documents[documentId].isRevoked, "Document is already revoked");
-
-        documents[documentId].isRevoked = true;
-        documents[documentId].revocationReason = reason;
-        emit DocumentRevoked(documentId, msg.sender, reason);
-    }
-
-    /**
-     * @dev Query the verification status of a document.
-     * @param documentId The ID of the document to query.
-     * @return isVerified Whether the document is verified.
-     * @return isRevoked Whether the document is revoked.
-     * @return revocationReason The reason for revocation (if applicable).
-     */
-    function queryDocumentStatus(uint256 documentId) external view returns (bool isVerified, bool isRevoked, string memory revocationReason) {
-        require(documentId > 0 && documentId <= documentCounter, "Invalid document ID");
+    function retrieveDocument(uint256 documentId) external view onlyRole(ADMIN_ROLE) returns (string memory, string memory, string memory, address) {
+        require(documentExists[documentId], "Document does not exist");
 
         Document memory doc = documents[documentId];
-        return (doc.isVerified, doc.isRevoked, doc.revocationReason);
+        return (doc.title, doc.description, doc.documentType, doc.uploader);
+    }
+
+    /**
+     * @dev Delete a document by its ID.
+     * @param documentId The unique identifier for the document.
+     */
+    function deleteDocument(uint256 documentId) external onlyRole(ADMIN_ROLE) {
+        require(documentExists[documentId], "Document does not exist");
+        require(documents[documentId].uploader == msg.sender, "Only the uploader can delete the document");
+
+        delete documents[documentId];
+        delete documentExists[documentId];
+        emit DocumentDeleted(documentId, msg.sender);
     }
 
     /**
