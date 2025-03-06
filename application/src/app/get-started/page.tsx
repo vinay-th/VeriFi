@@ -12,6 +12,8 @@ const Page = async () => {
 
   const role = user?.publicMetadata.role;
 
+  console.log(role);
+
   if (role === 'admin') {
     redirect('/admin');
   } else if (role === 'student') {

@@ -5,6 +5,8 @@ const getRole = async () => {
 
   const role = user?.publicMetadata.role;
 
+  console.log(role);
+
   return role;
 };
 
