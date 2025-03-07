@@ -1,31 +1,40 @@
-require('dotenv').config();
-const { ethers } = require("ethers");
+const hre = require("hardhat");
 
 async function main() {
-    const provider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545");
-    const [student, employer, admin, deployer] = await ethers.getSigners(); // Get Hardhat test accounts
+    const [admin] = await hre.ethers.getSigners(); // Getting the admin account from the local node
 
-    const VeriFi = await ethers.getContractFactory("VeriFi");
-    const veriFi = new VeriFi.attach(process.env.CONTRACT_ADDRESS).connect(deployer); // Connect with deployer's wallet
+    const contractAddress = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"; 
+    const Contract = await hre.ethers.getContractFactory("VeriFi");
+    const contract = await Contract.attach(contractAddress).connect(admin);
 
-    // ... (rest of your interaction logic using student, employer, admin signers)
+    // Example: Add a new admin (use a local account)
+    const newAdmin = "0xFABB0ac9d68B0B445fB7357272Ff202C5651694a"; 
+    console.log(`Adding admin at ${newAdmin}...`);
+    const tx = await contract.addAdmin(newAdmin);
+    await tx.wait();
+    console.log(`Admin added successfully!`);
 
-    const ipfsHash1 = "QmWATm7ABjTjT9n9c59BrWn4i9v79eo3uQe72wFj9V5y9A";
-    const tx1 = await veriFi.connect(student).uploadDocument(ipfsHash1); // Student uploads
-    await tx1.wait();
-    const documentHash1 = ethers.keccak256(ethers.encodePacked(ipfsHash1));
+    // Example: Upload a document
+    const documentId = 1;
+    const title = "Document 1";
+    const description = "Document description.";
+    const documentType = "PDF";
+    console.log(`Uploading document with ID: ${documentId}...`);
+    const uploadTx = await contract.uploadDocument(documentId, title, description, documentType);
+    await uploadTx.wait();
+    console.log(`Document uploaded successfully!`);
 
-    const accessType = "read";
-    const accessDuration = 3600;
-    const tx2 = await veriFi.connect(employer).requestAccess(documentHash1, accessType, accessDuration); // Employer requests
-    await tx2.wait();
-
-    const tx3 = await veriFi.connect(admin).grantAccess(documentHash1); // Admin grants (if admin is authorized)
-    await tx3.wait();
-
-
-    // ... more interaction examples
-
+    // Example: Retrieve a document
+    const [docTitle, docDescription, docType, docUploader] = await contract.retrieveDocument(documentId);
+    console.log(`Document Title: ${docTitle}`);
+    console.log(`Document Description: ${docDescription}`);
+    console.log(`Document Type: ${docType}`);
+    console.log(`Uploader: ${docUploader}`);
 }
 
-// ... (rest of the code)
+main()
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
