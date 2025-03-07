@@ -30,11 +30,24 @@ contract VeriFi is AccessControl {
     // Mapping to track document existence
     mapping(uint256 => bool) public documentExists;
 
+    // Pending Requests
+    mapping(address => mapping(uint256 => mapping(address => bool))) public pendingRequests;
+
+    // Hash Code Logic
+    mapping(string => address) public hashToAddress;
+
+    // Access Revocation
+    mapping(address => mapping(uint256 => uint256)) public accessGrantTimestamps;
+
     // Events
     event DocumentUploaded(uint256 indexed documentId, string title, string description, string documentType, address indexed uploader);
     event DocumentDeleted(uint256 indexed documentId, address indexed verifier);
     event VerifierAdded(address indexed verifier);
     event VerifierRemoved(address indexed verifier);
+    event AccessRequested(address indexed studentAddress, uint256 indexed documentId, address indexed employerAddress);
+    event AccessGranted(address indexed employerAddress, uint256 indexed documentId, address indexed studentAddress);
+    event AccessRejected(address indexed employerAddress, uint256 indexed documentId, address indexed studentAddress);
+    event HashCodeAdded(string indexed hashcode, address indexed studentAddress);
 
     /**
      * @dev Constructor to initialize the contract and grant the deployer the default admin role.
@@ -118,5 +131,90 @@ contract VeriFi is AccessControl {
     function removeVerifier(address verifier) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _revokeRole(VERIFIER_ROLE, verifier);
         emit VerifierRemoved(verifier);
+    }
+
+    /**
+     * @dev Request access to a document.
+     * @param documentId The unique identifier for the document.
+     * @param employerAddress The address of the employer requesting access.
+     * @notice Only the student can request access to their own document.
+     */
+    function requestAccess(uint256 documentId, address employerAddress) external {
+        require(documentExists[documentId], "Document does not exist");
+
+        pendingRequests[msg.sender][documentId][employerAddress] = true;
+        emit AccessRequested(msg.sender, documentId, employerAddress);
+    }
+
+    /**
+     * @dev Grant access to a document.
+     * @param employerAddress The address of the employer to grant access.
+     * @param documentId The unique identifier for the document.
+     * @notice Only the student can grant access to their own document.
+     */
+    function grantAccess(address employerAddress, uint256 documentId) external {
+        require(pendingRequests[msg.sender][documentId][employerAddress], "No pending request");
+        require(documentExists[documentId], "Document does not exist");
+
+        pendingRequests[msg.sender][documentId][employerAddress] = false;
+        accessGrantTimestamps[employerAddress][documentId] = block.timestamp;
+        emit AccessGranted(employerAddress, documentId, msg.sender);
+    }
+
+    /**
+     * @dev Reject access to a document.
+     * @param employerAddress The address of the employer to reject access.
+     * @param documentId The unique identifier for the document.
+     * @notice Only the student can reject access to their own document.
+     */
+    function rejectAccess(address employerAddress, uint256 documentId) external {
+        require(pendingRequests[msg.sender][documentId][employerAddress], "No pending request");
+        require(documentExists[documentId], "Document does not exist");
+
+        pendingRequests[msg.sender][documentId][employerAddress] = false;
+        emit AccessRejected(employerAddress, documentId, msg.sender);
+    }
+
+    /**
+     * @dev Add a hashcode and address pair.
+     * @param hashcode The 8-digit hashcode.
+     * @param studentAddress The address of the student.
+     * @notice Only the default admin can add hashcodes.
+     */
+    function addHashCode(string memory hashcode, address studentAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(bytes(hashcode).length == 8, "Hashcode must be 8 digits");
+        require(hashToAddress[hashcode] == address(0), "Hashcode already exists");
+
+        hashToAddress[hashcode] = studentAddress;
+        emit HashCodeAdded(hashcode, studentAddress);
+    }
+
+    /**
+     * @dev Get the address associated with a hashcode.
+     * @param hashcode The 8-digit hashcode.
+     * @return The address of the student.
+     */
+    function getAddressFromHashCode(string memory hashcode) external view returns (address) {
+        return hashToAddress[hashcode];
+    }
+
+    /**
+     * @dev Get pending requests for a student.
+     * @param studentAddress The address of the student.
+     * @param documentId The unique identifier for the document.
+     * @return An array of employer addresses with pending requests.
+     */
+    function getPendingRequests(address studentAddress, uint256 documentId) external view returns (address[] memory) {
+        address[] memory employers = new address[](100); // Adjust size as needed
+        uint256 count = 0;
+
+        for (uint256 i = 0; i < 100; i++) {
+            if (pendingRequests[studentAddress][documentId][address(uint160(i))]) {
+                employers[count] = address(uint160(i));
+                count++;
+            }
+        }
+
+        return employers;
     }
 }
