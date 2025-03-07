@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/vercel';
 import { db } from '@/db';
-import { documents, students } from '@/db/schema';
+import { access, documents, students } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { keyAuth } from '../../../../../middleware/keyAuth';
 
@@ -120,6 +120,46 @@ app.get('/get-all-documents', keyAuth, async (c) => {
     .where(eq(documents.student_id, student_id));
 
   return c.json(allDocs);
+});
+
+app.post('/request-access', keyAuth, async (c) => {
+  const body = await c.req.json();
+  const {
+    student_id,
+    organization_id,
+    document_id,
+    access_duration,
+    status,
+    hexcode,
+    access_type,
+  } = body;
+
+  if (
+    !student_id ||
+    !organization_id ||
+    !document_id ||
+    !access_duration ||
+    !hexcode ||
+    !status ||
+    !access_type
+  ) {
+    return c.json(
+      { error: 'Missing student ID, organization ID or document ID' },
+      400
+    );
+  }
+
+  await db.insert(access).values({
+    student_id,
+    organization_id,
+    document_id,
+    access_duration,
+    status,
+    access_type,
+    hexcode,
+  });
+
+  return c.json({ message: 'Access requested successfully' });
 });
 
 export const GET = handle(app);

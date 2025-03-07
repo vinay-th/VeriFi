@@ -43,5 +43,45 @@ app.get('/get-doc', keyAuth, async (c) => {
   return c.json(document);
 });
 
+app.post('/update-doc', keyAuth, async (c) => {
+  const body = await c.req.json();
+  const {
+    id,
+    name,
+    student_id,
+    ipfs_hash,
+    url,
+    verifier_id,
+    status,
+    metadata,
+  } = body;
+
+  if (!id) {
+    return c.json({ error: 'Missing document ID' }, 400);
+  }
+
+  const updateData: Record<string, string | null> = {};
+
+  if (name !== undefined) updateData.document_name = name || null;
+  if (student_id !== undefined) updateData.student_id = student_id || null;
+  if (ipfs_hash !== undefined) updateData.ipfs_hash = ipfs_hash || null;
+  if (url !== undefined) updateData.url = url || null;
+  if (verifier_id !== undefined) updateData.verifier_id = verifier_id || null;
+  if (status !== undefined) updateData.status = status || null;
+  if (metadata !== undefined) updateData.metadata = metadata;
+
+  if (Object.keys(updateData).length === 0) {
+    return c.json({ error: 'No valid fields to update' }, 400);
+  }
+
+  // Perform update operation
+  await db
+    .update(documents)
+    .set(updateData)
+    .where(eq(documents.document_id, id));
+
+  return c.json({ message: 'Document updated successfully' });
+});
+
 export const GET = handle(app);
 export const POST = handle(app);
