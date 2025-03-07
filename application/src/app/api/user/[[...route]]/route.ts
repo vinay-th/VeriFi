@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { students, users, verifiers } from '@/db/schema';
+import { organizations, students, users, verifiers } from '@/db/schema';
 import { desc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -112,6 +112,34 @@ app.patch('/', keyAuth, async (c) => {
     });
 
     return c.json({ message: 'User registered as verifier successfully' });
+  }
+
+  if (role === 'ORGANIZATION') {
+    const existingUser = await db.select().from(users).where(eq(users.id, id));
+
+    if (existingUser.length === 0) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    // Check if user is already in organizations table
+    const existingOrganization = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.user_id, id));
+
+    if (existingOrganization.length > 0) {
+      return c.json({
+        message: 'User is already registered as an organization',
+      });
+    }
+
+    await db.insert(organizations).values({
+      user_id: id,
+      organization_name: existingUser[0].name,
+      web3_wallet: existingUser[0].web3_wallet || null,
+    });
+
+    return c.json({ message: 'User registered as organization successfully' });
   }
 
   return c.json({ message: 'User data updated', updatedFields: updateData });
