@@ -8,6 +8,7 @@ export default function SignInPage() {
           routing="path"
           path="/sign-in"
           forceRedirectUrl={'/get-started'}
+          redirectUrl={'/get-started'}
         />
       </div>
     </ClerkProvider>

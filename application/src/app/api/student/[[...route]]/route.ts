@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/vercel';
 import { db } from '@/db';
-import { students } from '@/db/schema';
+import { documents, students } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { keyAuth } from '../../../../../middleware/keyAuth';
 
@@ -86,6 +86,22 @@ app.post('/allot-verifier', keyAuth, async (c) => {
     .where(eq(students.enrolment_id, enrolment_id));
 
   return c.json({ message: `Verifier allotted successfully` });
+});
+
+app.post('/get-all-documents', keyAuth, async (c) => {
+  const body = await c.req.json();
+  const { student_id } = body;
+
+  if (!student_id) {
+    return c.json({ error: 'Missing student ID' }, 400);
+  }
+
+  const allDocs = await db
+    .select()
+    .from(documents)
+    .where(eq(documents.student_id, student_id));
+
+  return c.json(allDocs);
 });
 
 export const GET = handle(app);
