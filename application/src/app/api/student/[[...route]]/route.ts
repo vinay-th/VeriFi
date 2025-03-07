@@ -88,9 +88,27 @@ app.post('/allot-verifier', keyAuth, async (c) => {
   return c.json({ message: `Verifier allotted successfully` });
 });
 
-app.post('/get-all-documents', keyAuth, async (c) => {
-  const body = await c.req.json();
-  const { student_id } = body;
+app.get('/get-hexcode', keyAuth, async (c) => {
+  const id = Number(c.req.query('id'));
+
+  if (!id) {
+    return c.json({ error: 'Missing student ID' }, 400);
+  }
+
+  const student = await db
+    .select()
+    .from(students)
+    .where(eq(students.enrolment_id, id));
+
+  if (student.length === 0) {
+    return c.json({ error: 'Student not found' }, 404);
+  }
+
+  return c.json(student[0].hexcode);
+});
+
+app.get('/get-all-documents', keyAuth, async (c) => {
+  const student_id = Number(c.req.query('id'));
 
   if (!student_id) {
     return c.json({ error: 'Missing student ID' }, 400);
