@@ -91,7 +91,7 @@ const About = () => {
   const [hovered, setHovered] = React.useState(false);
 
   return (
-    <div className="relative mt-20 flex flex-col items-center ">
+    <div className="relative mt-20 flex flex-col items-center">
       <h1 ref={titleRef} className="text-4xl font-bold text-center">
         Securely Store Your Credentials with <br />
         Cutting-Edge Blockchain Technology

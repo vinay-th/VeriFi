@@ -13,22 +13,37 @@ const getGreetingAndIcon = (hours: number) => {
   return { text: 'Good Night', icon: <LuMoon size={20} /> };
 };
 
+const defaultGreeting = {
+  text: 'Welcome',
+  icon: <LuSun size={20} />,
+};
+
 const Greeting = () => {
-  const [greeting, setGreeting] = useState({
-    text: '',
-    icon: <LuSun size={20} />,
-  });
+  const [greeting, setGreeting] = useState(defaultGreeting);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    const date = new Date();
-    const localTime = new Intl.DateTimeFormat('en-US', {
-      hour: 'numeric',
-      hour12: false,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    }).format(date);
+    setIsClient(true);
+    const updateGreeting = () => {
+      const date = new Date();
+      const hours = date.getHours();
+      setGreeting(getGreetingAndIcon(hours));
+    };
 
-    setGreeting(getGreetingAndIcon(Number(localTime)));
+    updateGreeting();
+    const interval = setInterval(updateGreeting, 60000); // Update every minute
+    return () => clearInterval(interval);
   }, []);
+
+  // During SSR and initial client render, show default greeting
+  if (!isClient) {
+    return (
+      <h1 className="text-base font-Rubik text-[#6A5AE0] font-semibold leading-5 tracking-wider flex flex-row items-center gap-1">
+        {defaultGreeting.icon}
+        {defaultGreeting.text}
+      </h1>
+    );
+  }
 
   return (
     <h1 className="text-base font-Rubik text-[#6A5AE0] font-semibold leading-5 tracking-wider flex flex-row items-center gap-1">

@@ -1,15 +1,24 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { UploadCloud } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useDocument } from '@/hooks/useDocument';
+import { useDocumentContext } from '@/contexts/DocumentContext';
+import { useUser } from '@clerk/nextjs';
 
 export default function VeriFiUploadCard() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
-  const [metadata, setMetadata] = useState('');
-  const [uploading, setUploading] = useState(false);
+  const [documentType, setDocumentType] = useState('');
+  const [targetStudentId, setTargetStudentId] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const { uploadDocument, isLoading } = useDocument();
+  const { refreshDocuments } = useDocumentContext();
+  const { user } = useUser();
 
   interface FileChangeEvent extends React.ChangeEvent<HTMLInputElement> {
     target: HTMLInputElement & { files: FileList };
@@ -25,18 +34,21 @@ export default function VeriFiUploadCard() {
   };
 
   const handleUpload = async () => {
-    if (!file || !title) {
-      toast.error('Please select a file and provide a title');
+    if (!file || !title || !targetStudentId || !user?.id) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    try {
-      setUploading(true);
+    setIsUploading(true);
 
+    try {
+      // First upload to Pinata
       const formData = new FormData();
       formData.append('file', file);
       formData.append('title', title);
-      formData.append('metadata', metadata);
+      formData.append('metadata', documentType);
+      formData.append('studentId', targetStudentId);
+      formData.append('verifierId', user.id);
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -49,55 +61,37 @@ export default function VeriFiUploadCard() {
         throw new Error(data.error || 'Upload failed');
       }
 
-      if (!data.fileUrl) {
-        throw new Error('No file URL received from server');
+      if (!data.ipfsHash) {
+        throw new Error('No IPFS hash received from server');
       }
 
-      console.log('File uploaded successfully!');
-      console.log('IPFS File URL:', data.fileUrl);
-      console.log('IPFS Metadata URL:', data.metadataUrl);
-      console.log('File Hash:', data.fileHash);
-      console.log('Metadata:', data.metadata);
+      // Then upload to blockchain
+      const success = await uploadDocument(
+        Date.now(), // Using timestamp as document ID for now
+        title,
+        data.ipfsHash, // Using IPFS hash as description
+        documentType || 'general' // Document type
+      );
 
-      toast.success('File uploaded successfully!', {
-        description: (
-          <div>
-            <p>
-              File URL:{' '}
-              <a
-                href={data.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                {data.fileUrl}
-              </a>
-            </p>
-            <p>
-              Metadata URL:{' '}
-              <a
-                href={data.metadataUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                {data.metadataUrl}
-              </a>
-            </p>
-          </div>
-        ),
-        duration: 10000,
-      });
-
-      // Reset form
-      setFile(null);
-      setTitle('');
-      setMetadata('');
+      if (success) {
+        toast.success('Document uploaded successfully!');
+        // Reset form
+        setFile(null);
+        setTitle('');
+        setDocumentType('');
+        setTargetStudentId('');
+        // Refresh documents list
+        await refreshDocuments();
+      } else {
+        throw new Error('Failed to upload to blockchain');
+      }
     } catch (error) {
       console.error('Error uploading file:', error);
-      toast.error('Error uploading file. Please try again.');
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Error uploading file: ${errorMessage}`);
     } finally {
-      setUploading(false);
+      setIsUploading(false);
     }
   };
 
@@ -113,13 +107,25 @@ export default function VeriFiUploadCard() {
           placeholder="Title of the file"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          disabled={isUploading}
         />
         <Input
-          placeholder="Document metadata"
-          value={metadata}
-          onChange={(e) => setMetadata(e.target.value)}
+          placeholder="Document type"
+          value={documentType}
+          onChange={(e) => setDocumentType(e.target.value)}
+          disabled={isUploading}
         />
-        <label className="flex items-center justify-center w-full border-2 border-dashed rounded-lg p-4 cursor-pointer hover:bg-gray-100">
+        <Input
+          placeholder="Student ID (Clerk User ID)"
+          value={targetStudentId}
+          onChange={(e) => setTargetStudentId(e.target.value)}
+          disabled={isUploading}
+        />
+        <label
+          className={`flex items-center justify-center w-full border-2 border-dashed rounded-lg p-4 cursor-pointer hover:bg-gray-100 ${
+            isUploading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
           <UploadCloud className="mr-2" />
           <span>{file ? file.name : 'Click to upload'}</span>
           <input
@@ -127,10 +133,15 @@ export default function VeriFiUploadCard() {
             className="hidden"
             accept="application/pdf"
             onChange={handleFileChange}
+            disabled={isUploading}
           />
         </label>
-        <Button className="w-full" onClick={handleUpload} disabled={uploading}>
-          {uploading ? 'Uploading...' : 'Submit'}
+        <Button
+          className="w-full"
+          onClick={handleUpload}
+          disabled={isUploading || isLoading}
+        >
+          {isUploading ? 'Uploading...' : 'Submit'}
         </Button>
       </CardContent>
     </Card>

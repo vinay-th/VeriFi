@@ -1,60 +1,13 @@
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-interface Document {
-  document_id: number; // Changed from 'id'
-  student_id: number;
-  ipfs_hash: string;
-  url: string;
-  verifier_id: string;
-  document_name: string; // Changed from 'name'
-  createdAt: string; // Changed from 'uploaded_at'
-  updatedAt: string;
-  status: string;
-  metadata: string; // Changed from 'type'
-}
+import { useDocumentContext } from '@/contexts/DocumentContext';
 
 interface DocumentsTableProps {
-  studentId: number;
   height: number;
   width: number;
 }
 
-const DocumentsTable = ({ studentId, height, width }: DocumentsTableProps) => {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      try {
-        const response = await fetch(
-          `/api/student/get-all-documents?id=${studentId}`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': 'DADDY-IS-HOME',
-            },
-          }
-        );
-
-        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
-
-        const data = await response.json();
-        if (!Array.isArray(data)) throw new Error('Invalid response format');
-
-        setDocuments(data);
-      } catch (error) {
-        console.error('Failed to fetch documents:', error);
-        setError('Failed to load documents');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDocuments();
-  }, [studentId]);
+const DocumentsTable = ({ height, width }: DocumentsTableProps) => {
+  const { documents, isLoading, error } = useDocumentContext();
 
   return (
     <div style={{ width: `${width}px` }}>
@@ -63,7 +16,7 @@ const DocumentsTable = ({ studentId, height, width }: DocumentsTableProps) => {
           <CardTitle>Student Documents</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {isLoading ? (
             <p>Loading...</p>
           ) : error ? (
             <p className="text-red-500">{error}</p>
@@ -76,15 +29,12 @@ const DocumentsTable = ({ studentId, height, width }: DocumentsTableProps) => {
             >
               {documents.map((doc) => (
                 <Card key={doc.document_id} className="h-20">
-                  {' '}
-                  {/* Use document_id */}
                   <CardContent className="flex flex-col justify-between h-full p-4">
                     <div className="font-semibold truncate">
-                      {doc.document_name}
-                    </div>{' '}
-                    {/* Use document_name */}
+                      {doc.document_name || doc.title}
+                    </div>
                     <div className="text-xs text-gray-500 text-right">
-                      {doc.metadata} {/* Use metadata */}
+                      {doc.metadata || doc.documentType}
                     </div>
                   </CardContent>
                 </Card>

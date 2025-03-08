@@ -11,9 +11,13 @@ import VerifierSidebar from '../components/verifier/VerifierSidebar';
 import VeriFiUploadCard from '../components/student/VerifiUploadCard';
 import RecentlyVerified from '../components/verifier/RecentlyVerified';
 import VerifiedDocuments from '../components/verifier/VerifiedDocuments';
+import { DocumentProvider } from '@/contexts/DocumentContext';
+import { useUser } from '@clerk/nextjs';
 
 const Page = () => {
   const [selected, setSelected] = React.useState('Dashboard');
+  const { user } = useUser();
+  const verifierId = user?.id || '';
 
   const handleClick = (item: string) => {
     setSelected(item);
@@ -59,16 +63,18 @@ const Page = () => {
 
         {/* Content Area */}
         <div className="flex-1 overflow-x-hidden p-10 text-white">
-          <div className="flex flex-row gap-10">
-            <VeriFiUploadCard />
-            <div className="flex flex-col gap-10">
-              <RecentlyVerified verifierId="VER001" />
-              <PendingVerifications accessId={1} />
+          <DocumentProvider>
+            <div className="flex flex-row gap-10">
+              <VeriFiUploadCard />
+              <div className="flex flex-col gap-10">
+                <RecentlyVerified verifierId={verifierId} />
+                <PendingVerifications accessId={1} />
+              </div>
+              <div>
+                <VerifiedDocuments verifierId={verifierId} />
+              </div>
             </div>
-            <div>
-              <VerifiedDocuments verifierId="VER001" />
-            </div>
-          </div>
+          </DocumentProvider>
           <div className="relative flex flex-row gap-10 mt-6">
             {/* <DocumentsTable height={500} width={750} /> */}
             <div

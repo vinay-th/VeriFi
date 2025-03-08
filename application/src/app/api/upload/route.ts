@@ -1,9 +1,10 @@
-import { Hono } from 'hono';
-import { handle } from 'hono/vercel';
 import pinataSDK from '@pinata/sdk';
 import { Readable } from 'stream';
-
-const app = new Hono();
+import { DocumentContract } from '@/lib/contract';
+import { db } from '@/db';
+import { documents, students, verifiers } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
 
 const pinata = new pinataSDK(
   process.env.PINATA_API_KEY,
@@ -12,19 +13,16 @@ const pinata = new pinataSDK(
 
 interface UploadResponse {
   success: boolean;
-  fileHash: string;
-  metadataHash: string;
+  ipfsHash: string;
   metadata: {
     title: string;
-    metadata: string;
+    documentType: string;
     fileName: string;
     fileSize: number;
     fileType: string;
-    ipfsHash: string;
+    studentId: string;
     timestamp: string;
   };
-  fileUrl: string;
-  metadataUrl: string;
 }
 
 // Helper function to convert any Sets to Arrays in an object
@@ -51,15 +49,101 @@ function sanitizeResponse<T>(obj: T): T {
   return obj;
 }
 
-app.post('/api/upload', async (c) => {
+export async function POST(req: Request) {
   try {
-    const formData = await c.req.formData();
+    const formData = await req.formData();
     const file = formData.get('file') as File;
     const title = formData.get('title') as string;
-    const metadata = formData.get('metadata') as string;
+    const documentType = formData.get('metadata') as string;
+    const studentId = formData.get('studentId') as string;
+    const clerkVerifierId = formData.get('verifierId') as string;
 
-    if (!file || !title) {
-      return c.json({ error: 'File and title are required' }, 400);
+    console.log('Received upload request:', {
+      title,
+      documentType,
+      studentId,
+      clerkVerifierId,
+    });
+
+    if (!file || !title || !studentId || !clerkVerifierId) {
+      return NextResponse.json(
+        { error: 'File, title, student ID, and verifier ID are required' },
+        { status: 400 }
+      );
+    }
+
+    // Get verifier's ID from the verifiers table
+    const verifier = await db
+      .select()
+      .from(verifiers)
+      .where(eq(verifiers.user_id, clerkVerifierId));
+
+    console.log('Found verifier:', verifier[0] || 'No verifier found');
+
+    if (verifier.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            'Verifier not found. Please make sure you are registered as a verifier.',
+        },
+        { status: 404 }
+      );
+    }
+
+    const verifierId = verifier[0].verifier_id;
+
+    // Get student's enrolment_id
+    const student = await db
+      .select()
+      .from(students)
+      .where(eq(students.user_id, studentId));
+
+    console.log('Found student:', student[0] || 'No student found');
+
+    if (student.length === 0) {
+      // Try to register the student first
+      try {
+        const response = await fetch(
+          'http://localhost:3000/api/student/register-student',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': 'DADDY-IS-HOME',
+            },
+            body: JSON.stringify({
+              user_id: studentId,
+              name: 'Student',
+              email: 'student@example.com',
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to register student');
+        }
+
+        // Get the newly registered student
+        const newStudent = await db
+          .select()
+          .from(students)
+          .where(eq(students.user_id, studentId));
+
+        if (newStudent.length === 0) {
+          return NextResponse.json(
+            { error: 'Failed to create student record' },
+            { status: 500 }
+          );
+        }
+
+        student[0] = newStudent[0];
+      } catch (error) {
+        console.error('Error registering student:', error);
+        return NextResponse.json(
+          { error: 'Student not found and registration failed' },
+          { status: 404 }
+        );
+      }
     }
 
     // Convert file to buffer and create a readable stream
@@ -87,47 +171,60 @@ app.post('/api/upload', async (c) => {
     // Create metadata object
     const metadataObj = {
       title,
-      metadata,
+      documentType,
       fileName: file.name,
       fileSize: file.size,
       fileType: file.type,
-      ipfsHash: fileResult.IpfsHash,
+      studentId,
       timestamp: new Date().toISOString(),
     };
 
-    // Upload metadata to Pinata
-    const metadataResult = await pinata.pinJSONToIPFS(metadataObj, {
-      pinataMetadata: {
-        name: `${file.name}-metadata`,
-      },
-    });
+    // Add hash to contract for the student
+    try {
+      await DocumentContract.addHashCode(fileResult.IpfsHash, studentId);
+    } catch (error) {
+      console.error('Error adding hash to contract:', error);
+      return NextResponse.json(
+        { error: 'Failed to add document to blockchain' },
+        { status: 500 }
+      );
+    }
 
-    // Construct gateway URLs
-    const fileUrl = `https://gateway.pinata.cloud/ipfs/${fileResult.IpfsHash}`;
-    const metadataUrl = `https://gateway.pinata.cloud/ipfs/${metadataResult.IpfsHash}`;
+    // Store document in database
+    try {
+      await db.insert(documents).values({
+        student_id: student[0].enrolment_id,
+        ipfs_hash: fileResult.IpfsHash,
+        url: `https://gateway.pinata.cloud/ipfs/${fileResult.IpfsHash}`,
+        verifier_id: verifierId,
+        document_name: title,
+        status: 'verified',
+        metadata: documentType,
+      });
+    } catch (error) {
+      console.error('Error storing document in database:', error);
+      return NextResponse.json(
+        { error: 'Failed to store document in database' },
+        { status: 500 }
+      );
+    }
 
     const response: UploadResponse = {
       success: true,
-      fileHash: fileResult.IpfsHash,
-      metadataHash: metadataResult.IpfsHash,
+      ipfsHash: fileResult.IpfsHash,
       metadata: metadataObj,
-      fileUrl,
-      metadataUrl,
     };
 
-    // Sanitize the response to convert any Sets to Arrays
-    return c.json(sanitizeResponse(response));
+    // Return the sanitized response
+    return NextResponse.json(sanitizeResponse(response));
   } catch (error) {
     console.error('Upload error:', error);
-    return c.json(
+    return NextResponse.json(
       {
         error: 'Failed to upload file',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      500
+      { status: 500 }
     );
   }
-});
-
-export const GET = handle(app);
-export const POST = handle(app);
+}
