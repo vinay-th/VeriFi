@@ -1,0 +1,29 @@
+# Node.js dependencies
+node_modules/
+
+# Hardhat artifacts and cache
+artifacts/
+cache/
+
+# Environment files
+.env
+
+# Log files
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor directories and files
+.vscode/
+.idea/
+
+# NPM package lock file if you don't want it tracked (optional)
+package-lock.json
+
+# Hardhat test reports
+test_reports/
+
+# Coverage reports (if using code coverage)
+coverage/
