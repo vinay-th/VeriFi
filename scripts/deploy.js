@@ -6,9 +6,7 @@ async function main() {
     const VeriFi = await hre.ethers.getContractFactory("VeriFi");
     const veriFi = await VeriFi.deploy();
 
-    await veriFi.deployed();
-
-    console.log("VeriFi deployed to:", veriFi.address);
+    console.log("VeriFi deployed to:", veriFi.target);
     console.log("Owner address:", owner.address);
     console.log("Verifier address:", verifier.address);
     console.log("Student address:", student.address);
