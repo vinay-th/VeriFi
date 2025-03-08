@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-const contractAddress = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'; // Replace with your contract address
+const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3'; // Replace with your contract address
 const abi = [
   {
     inputs: [],
@@ -764,7 +764,9 @@ const abi = [
   },
 ];
 
-const provider = new ethers.JsonRpcProvider('http://localhost:8545');
+const provider = new ethers.JsonRpcProvider(
+  'http://127.0.0.1:8545/' // Replace with your provider
+);
 const signer = await provider.getSigner();
 const contract = new ethers.Contract(contractAddress, abi, signer);
 
