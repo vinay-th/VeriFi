@@ -1,6 +1,7 @@
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { FiMeh } from 'react-icons/fi';
 import React, { useEffect, useState } from 'react';
+import { useUser } from '@clerk/nextjs';
 
 interface VerifiedDocument {
   document_id: string;
@@ -19,6 +20,10 @@ const getRecentlyVerified = async (
   verifier_id: string
 ): Promise<VerifiedDocument | null> => {
   try {
+    if (!verifier_id) {
+      throw new Error('Verifier ID is required');
+    }
+
     const response = await fetch(
       `/api/verifier/get-all-verified-documents?verifierId=${verifier_id}`,
       {
@@ -40,29 +45,65 @@ const getRecentlyVerified = async (
       throw new Error('Invalid response format');
     }
 
-    return data[0];
+    // Sort by createdAt and get the most recent
+    const sortedData = data.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    return sortedData[0] || null;
   } catch (error) {
-    console.error('Failed to fetch pending requests:', error);
+    console.error('Failed to fetch verified documents:', error);
     return null;
   }
 };
 
-const RecentlyVerified = ({ verifierId }: { verifierId: string }) => {
+const RecentlyVerified = () => {
   const [verified, setVerified] = useState<VerifiedDocument | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useUser();
 
   useEffect(() => {
     const fetchVerified = async () => {
-      const lastVerified = await getRecentlyVerified(verifierId);
-      setVerified(lastVerified);
+      if (!user?.id) return;
+
+      try {
+        setLoading(true);
+        const lastVerified = await getRecentlyVerified(user.id);
+        setVerified(lastVerified);
+      } catch (error) {
+        console.error('Error fetching verified documents:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchVerified();
-  }, [verifierId]);
+  }, [user?.id]);
+
+  if (loading) {
+    return (
+      <div>
+        <Card className="bg-[#EFEEFC] text-black rounded-xl p-6 pb-2">
+          <CardTitle className="font-Rubik text-2xl font-semibold leading-9">
+            Recent Verified
+          </CardTitle>
+          <CardContent>
+            <div className="flex flex-row justify-center mb-0 mt-2 items-center gap-4 text-[#660012] w-full">
+              <div className="flex flex-row p-4 bg-[#FFD6DD] rounded-lg w-full animate-pulse">
+                Loading...
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div>
       <Card className="bg-[#EFEEFC] text-black rounded-xl p-6 pb-2">
-        <CardTitle className="font-Rubik text-2xl font-semibold leading-9 ">
+        <CardTitle className="font-Rubik text-2xl font-semibold leading-9">
           Recent Verified
         </CardTitle>
         <CardContent>

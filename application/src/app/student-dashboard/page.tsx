@@ -7,6 +7,7 @@ import { IoDocumentOutline } from 'react-icons/io5';
 import { VscGitPullRequestGoToChanges } from 'react-icons/vsc';
 import ContextProvider from '../components/student/ContextProvider';
 import DocumentList from '../components/student/DocumentList';
+import PendingRequests from '../components/student/PendingRequests';
 import { DocumentProvider } from '@/contexts/DocumentContext';
 
 const Page = () => {
@@ -22,6 +23,12 @@ const Page = () => {
         return (
           <div className="flex-1 overflow-x-hidden p-10">
             <DocumentList />
+          </div>
+        );
+      case 'Requests':
+        return (
+          <div className="flex-1 overflow-x-hidden p-10">
+            <PendingRequests />
           </div>
         );
       default:

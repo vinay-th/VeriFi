@@ -4,6 +4,7 @@ import {
   text,
   timestamp,
   integer as pgInt,
+  varchar,
 } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
@@ -84,4 +85,17 @@ export const access = pgTable('access', {
   access_duration: text('access_duration').notNull(),
   status: text('status').notNull().default('pending'),
   access_type: text('access_type').notNull(),
+});
+
+export const access_requests = pgTable('access_requests', {
+  request_id: varchar('request_id').primaryKey(),
+  document_id: serial('document_id').references(() => documents.document_id),
+  organization_id: serial('organization_id').references(
+    () => organizations.organization_id
+  ),
+  student_id: serial('student_id').references(() => students.enrolment_id),
+  status: varchar('status').default('pending'),
+  requested_at: timestamp('requested_at').defaultNow(),
+  expires_at: timestamp('expires_at'),
+  duration_hours: serial('duration_hours'),
 });
