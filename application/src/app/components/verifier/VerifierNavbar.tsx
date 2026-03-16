@@ -10,7 +10,7 @@ const VerifierNavbar = () => {
       <ClerkProvider>
         <div className="w-fit h-12">
           <Greeting />
-          <UserTab />
+          <UserTab className='mr-10'/>
         </div>
       </ClerkProvider>
     </div>

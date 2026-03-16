@@ -146,6 +146,14 @@ export async function POST(req: Request) {
       }
     }
 
+    // Validate that the student has a connected Web3 wallet before touching the blockchain
+    if (!student[0].wallet_address) {
+      return NextResponse.json(
+        { error: 'Student has not connected a Web3 wallet. Ask the student to connect their wallet first.' },
+        { status: 400 }
+      );
+    }
+
     // Convert file to buffer and create a readable stream
     const buffer = Buffer.from(await file.arrayBuffer());
     const stream = Readable.from(buffer);
@@ -181,7 +189,8 @@ export async function POST(req: Request) {
 
     // Add hash to contract for the student
     try {
-      await DocumentContract.addHashCode(fileResult.IpfsHash, studentId);
+      // studentId is a Clerk user ID (not an Ethereum address); use wallet_address instead
+      await DocumentContract.addHashCode(fileResult.IpfsHash, student[0].wallet_address!);
     } catch (error) {
       console.error('Error adding hash to contract:', error);
       return NextResponse.json(

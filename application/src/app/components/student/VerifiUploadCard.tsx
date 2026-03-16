@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { UploadCloud } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useDocument } from '@/hooks/useDocument';
 import { useDocumentContext } from '@/contexts/DocumentContext';
 import { useUser } from '@clerk/nextjs';
 
@@ -16,7 +15,6 @@ export default function VeriFiUploadCard() {
   const [documentType, setDocumentType] = useState('');
   const [targetStudentId, setTargetStudentId] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  const { uploadDocument, isLoading } = useDocument();
   const { refreshDocuments } = useDocumentContext();
   const { user } = useUser();
 
@@ -65,26 +63,15 @@ export default function VeriFiUploadCard() {
         throw new Error('No IPFS hash received from server');
       }
 
-      // Then upload to blockchain
-      const success = await uploadDocument(
-        Date.now(), // Using timestamp as document ID for now
-        title,
-        data.ipfsHash, // Using IPFS hash as description
-        documentType || 'general' // Document type
-      );
-
-      if (success) {
-        toast.success('Document uploaded successfully!');
-        // Reset form
-        setFile(null);
-        setTitle('');
-        setDocumentType('');
-        setTargetStudentId('');
-        // Refresh documents list
-        await refreshDocuments();
-      } else {
-        throw new Error('Failed to upload to blockchain');
-      }
+      // Server already handled the blockchain interaction — show success
+      toast.success('Document uploaded successfully!');
+      // Reset form
+      setFile(null);
+      setTitle('');
+      setDocumentType('');
+      setTargetStudentId('');
+      // Refresh documents list
+      await refreshDocuments();
     } catch (error) {
       console.error('Error uploading file:', error);
       const errorMessage =
@@ -139,7 +126,7 @@ export default function VeriFiUploadCard() {
         <Button
           className="w-full"
           onClick={handleUpload}
-          disabled={isUploading || isLoading}
+          disabled={isUploading}
         >
           {isUploading ? 'Uploading...' : 'Submit'}
         </Button>

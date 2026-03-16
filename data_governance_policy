@@ -1,0 +1,72 @@
+# Data Governance & Naming Standards
+
+This document outlines the mandatory formal standards for naming conventions and data governance across the VeriFi exact repository. Based on an audit of the existing Next.js, Drizzle ORM, and Solidity smart contract codebases, the following policies MUST be adhered to by all developers and contributors.
+
+## Naming Conventions
+
+This section defines the mandatory rules for naming variables, classes, components, and functions within the general codebase (TypeScript/React and Solidity).
+
+### General Variables and Functions
+- **Variables and Functions (TypeScript/Solidity):** All standard variables and functions MUST use `camelCase`.
+  - *Example:* `const fetchAccessibleDocuments`, `function uploadDocument(...)`.
+- **Constants:** All global constants, especially role definitions in Solidity, MUST use `UPPER_SNAKE_CASE`.
+  - *Example:* `VERIFIER_ROLE`.
+- **Booleans:** All boolean variables MUST use `camelCase` and SHOULD be prefixed with `is`, `has`, `can`, or `should`.
+  - *Example:* `isExpired`, `documentExists`.
+
+### Classes, Components, and Structures
+- **React Components:** All React components MUST use `PascalCase` for both the filename and the function/variable name.
+  - *Example:* `export default function DocumentViewer()`.
+- **Interfaces, Types, and Structs:** All TypeScript interfaces/types and Solidity structs MUST use `PascalCase`.
+  - *Example:* `interface Document { ... }`, `struct Document { ... }`.
+- **Solidity Contracts and Events:** All smart contracts and contract events MUST use `PascalCase`.
+  - *Example:* `contract VeriFi`, `event DocumentUploaded(...)`.
+
+## Column Naming Policy
+
+This section defines the standards for naming database fields to ensure consistency across the data layer.
+
+### Field Casing
+- **General Columns:** All database columns MUST use `snake_case`. (Note that ORM model definitions can use `camelCase` for property names, but the underlying database column MUST be explicitly mapped to `snake_case`).
+  - *Example:* `web3_wallet`, `ipfs_hash`.
+
+### Timestamps
+- **Timestamp Suffixes:** All timestamp and temporal fields MUST be suffixed with `_at`. 
+  - *Example:* `created_at`, `updated_at`, `requested_at`, `expires_at`.
+
+### Booleans and Status Fields
+- **Status Identifiers:** Text fields reflecting the state of a record SHOULD be named `status` (or similarly descriptive terms). If stored as actual boolean types, they SHOULD logically indicate state but maintain `snake_case` if applied to database columns.
+  - *Example:* `status` (with values like `'pending'`, `'approved'`).
+
+## Key Naming Standards
+
+This section governs the naming of primary keys, foreign keys, and composite relationships within the database schema.
+
+### Primary Keys
+- **Default Primary Keys:** Whenever possible, table primary keys SHOULD simply be named `id`.
+  - *Example:* `id: serial('id').primaryKey()`.
+- **Table-Prefixed Primary Keys:** When multiple related entities require disambiguation or specific context (e.g., matching a domain object), the primary key MAY follow the `[table_singular]_id` pattern.
+  - *Example:* `student_id`, `document_id`, `organization_id`, `enrolment_id`.
+
+### Foreign Keys
+- **Foreign Key Suffixes:** All foreign keys MUST be suffixed with `_id` and MUST match the name of the entity they are referencing.
+  - *Example:* `user_id`, `student_id`, `verifier_id`.
+
+## Index Naming Standards
+
+Proper indexing ensures performant querying. Although Drizzle handles some index generation automatically, any explicit or manual index creation MUST follow these rules.
+
+### Explicit Indexes
+- **Standard Format:** All indexes MUST follow the pattern `idx_[table_name]_[column_name]`.
+  - *Example:* `idx_users_email` or `idx_documents_status`.
+- **Unique Indexes:** If an index enforces a unique constraint natively on a database level without ORM intervention, it MAY be prefixed with `uniq_` or `unq_`.
+
+## Migration Policy
+
+This section dictates how database schema changes are managed and versioned.
+
+### Migration Structure
+- **Location & Versioning:** All migrations MUST reside in the `src/db/migrations` (or equivalent `/migrations`) folder.
+- **Naming Pattern:** Migration files MUST be prefixed with a sequential version number followed by a brief `snake_case` description of the change, ensuring chronological execution.
+  - *Example:* [0003_create_access_requests.sql](file:///e:/Codes/Project/VeriFi/application/src/db/migrations/0003_create_access_requests.sql).
+- **Execution:** Migrations MUST be applied sequentially during deployment, and developers MUST NOT modify previously executed migration files. New schema changes MUST always result in a new forward-moving migration file.

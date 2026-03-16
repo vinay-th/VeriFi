@@ -19,7 +19,7 @@ export interface TransactionResult {
 
 // Contract configuration
 const CONTRACT_CONFIG = {
-  address: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
+  address: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
   rpcUrl: 'http://127.0.0.1:8545/',
   chainId: 31337, // Hardhat's default chain ID
   privateKey: process.env.NEXT_PUBLIC_WALLET_PRIVATE_KEY || '',
@@ -105,7 +105,7 @@ async function getContract(): Promise<ethers.Contract> {
 // Contract class with all methods
 export class DocumentContract {
   private static async handleTransaction(
-    transaction: Promise<ethers.ContractTransaction>
+    transaction: Promise<ethers.ContractTransactionResponse>
   ): Promise<TransactionResult> {
     try {
       const tx = await transaction;

@@ -15,7 +15,7 @@ interface VerifiedDocument {
   metadata: string;
 }
 
-const VerifiedDocuments = () => {
+const VerifiedDocuments = ({ verifierId }: { verifierId?: string }) => {
   const [documents, setDocuments] = useState<VerifiedDocument[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

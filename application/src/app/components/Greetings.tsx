@@ -46,7 +46,7 @@ const Greeting = () => {
   }
 
   return (
-    <h1 className="text-base font-Rubik text-[#6A5AE0] font-semibold leading-5 tracking-wider flex flex-row items-center gap-1">
+    <h1 className="text-base font-Rubik text-[#6A5AE0] font-semibold leading-5 tracking-wider flex flex-row items-center gap-2">
       {greeting.icon}
       {greeting.text}
     </h1>

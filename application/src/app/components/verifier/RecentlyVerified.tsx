@@ -58,7 +58,7 @@ const getRecentlyVerified = async (
   }
 };
 
-const RecentlyVerified = () => {
+const RecentlyVerified = ({ verifierId }: { verifierId?: string }) => {
   const [verified, setVerified] = useState<VerifiedDocument | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useUser();

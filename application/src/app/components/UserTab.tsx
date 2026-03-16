@@ -2,8 +2,9 @@
 import { UserButton, useUser } from '@clerk/nextjs';
 import React, { useState, useEffect } from 'react';
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
+import { cn } from '@/lib/utils';
 
-const UserTab = () => {
+const UserTab = ({ className }: { className?: string }) => {
   const { user, isLoaded } = useUser();
   const [mounted, setMounted] = useState(false);
 
@@ -26,7 +27,7 @@ const UserTab = () => {
   }
 
   return (
-    <div className="flex items-center gap-3 pr-4 rounded-lg">
+    <div className={cn("flex items-center gap-3 pr-4 rounded-lg", className)}>
       <div className="absolute left-[80rem] transform -translate-x-1/2">
         <UserButton
           appearance={{

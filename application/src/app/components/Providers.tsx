@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from 'next-themes';
 import { ClerkProvider } from '@clerk/nextjs';
+import { Toaster } from 'sonner';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <div suppressHydrationWarning>{children}</div>
+        <Toaster richColors position="top-right" />
       </ThemeProvider>
     </ClerkProvider>
   );
