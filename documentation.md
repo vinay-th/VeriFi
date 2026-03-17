@@ -1,6 +1,6 @@
 # VeriFi — Developer & Product Documentation
 
-> **Version:** 1.0 · **Last Updated:** March 2026 · **Status:** Production
+> **Version:** 1.0 · **Last Updated:** March 2026 · **Status:** Development
 
 ---
 
@@ -30,7 +30,7 @@
 
 ## 1. Product Overview
 
-**VeriFi** is a full-stack, production-grade credential verification platform that combines Ethereum smart contracts, IPFS decentralized storage, and a modern Next.js 15 web application to permanently and transparently verify academic documents.
+**VeriFi** is a full-stack, development-grade credential verification platform that combines Ethereum smart contracts, IPFS decentralized storage, and a modern Next.js 15 web application to permanently and transparently verify academic documents.
 
 ### Problem Statement
 
@@ -179,7 +179,7 @@ All Hono-based internal API routes are protected by a custom `keyAuth` middlewar
 x-api-key: DADDY-IS-HOME
 ```
 
-> ⚠️ **This key should be rotated and moved to an environment variable before production deployment.**
+> ⚠️ **This key should be rotated and moved to an environment variable before development deployment.**
 
 ### Route Authentication Matrix
 
@@ -529,7 +529,7 @@ All API routes are under `/api/` and use **Hono** as the handler framework. Inte
 
 ```
 Development:  http://localhost:3000/api
-Production:   https://your-domain.com/api
+development:   https://your-domain.com/api
 ```
 
 ---
@@ -970,7 +970,7 @@ RPC_URL=http://127.0.0.1:8545
 | `NEXT_PUBLIC_RPC_URL` | ✅ | Ethereum RPC endpoint URL |
 | `NEXT_PUBLIC_WALLET_PRIVATE_KEY` | ✅ | Admin wallet private key for server-side contract calls |
 
-> 🔐 **Never expose `NEXT_PUBLIC_WALLET_PRIVATE_KEY` in client-side code in production. Move admin calls to a secured server action or API route.**
+> 🔐 **Never expose `NEXT_PUBLIC_WALLET_PRIVATE_KEY` in client-side code in development. Move admin calls to a secured server action or API route.**
 
 ---
 
@@ -1049,14 +1049,14 @@ npx hardhat run scripts/deploy.js --network sepolia
 
 5. Update `NEXT_PUBLIC_CONTRACT_ADDRESS` and `NEXT_PUBLIC_RPC_URL` in Vercel env vars
 
-### Production Checklist
+### development Checklist
 
 - [ ] Rotate the internal API key away from `"DADDY-IS-HOME"` to a secure random value stored in env
 - [ ] Move admin wallet private key to a secrets manager (not a `NEXT_PUBLIC_` variable)
 - [ ] Set Clerk webhook signing secret in dashboard
-- [ ] Enable Neon connection pooling for production traffic
+- [ ] Enable Neon connection pooling for development traffic
 - [ ] Update `CONTRACT_CONFIG.chainId` in `contract.ts` to match target network
-- [ ] Set up Pinata dedicated gateway for production file access
+- [ ] Set up Pinata dedicated gateway for development file access
 - [ ] Enable HTTPS / enforce `sslmode=require` for database connections
 - [ ] Add rate limiting to `/api/upload`
 
@@ -1112,7 +1112,7 @@ npx hardhat run scripts/deploy.js --network sepolia
 | Issue | Risk | Recommendation |
 |-------|------|---------------|
 | No rate limiting on `/api/upload` | DoS / IPFS pin exhaustion | Add middleware rate limiter (e.g. Upstash Rate Limit) |
-| `localhost:3000` hardcoded in `upload/route.ts` | Fails in production when calling `/api/student/register-student` | Use relative paths or `process.env.NEXT_PUBLIC_APP_URL` |
+| `localhost:3000` hardcoded in `upload/route.ts` | Fails in development when calling `/api/student/register-student` | Use relative paths or `process.env.NEXT_PUBLIC_APP_URL` |
 
 ### 🟢 Already Secured
 
